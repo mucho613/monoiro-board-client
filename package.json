@@ -1,0 +1,14 @@
+{
+  "name": "oekaki-demo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Daisuke Yamamura",
+  "license": "MIT",
+  "dependencies": {
+    "pressure": "^2.1.2"
+  }
+}
