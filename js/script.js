@@ -6,15 +6,15 @@
   let canvasWidth = 800;
   let canvasHeight = 500;
 
-  document.addEventListener('touchmove', function(e) {
-    e.preventDefault();
-  }, {passive: false});
-
   Pressure.set('#canvas', {
     change: function(force){
       thickness = force;
     }
   });
+
+  canvas.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+  }, {passive: false});
 
   //キャンバスの背景カラーを決定。 fillRectは長方形に塗るメソッド
   var ctx = canvas.getContext('2d');
