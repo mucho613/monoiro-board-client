@@ -7,31 +7,36 @@
   <link rel="icon" href="favicon.ico">
   <link rel="stylesheet" href="css/style.css">
   <link href="https://fonts.googleapis.com/css?family=Noto+Sans+JP&display=swap&subset=japanese" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet">
   <title>MONOIRO Oekaki Chat(仮)</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pressure/2.1.2/pressure.min.js"></script>
 </head>
 <body>
-  <h1>MONOIRO Oekaki Chat(仮)</h1>
-  <p>名前募集中</p>
+  <div class="overlay">
+    <h1>MONOIRO Oekaki Chat</h1>
+    <p>名前は仮。いい名前募集中！</p>
 
-  <div>
     <button id="pen-btn">ペン</button>
     <button id="eraser-btn">消しゴム</button>
     <button id="all-erase-btn">全消去</button>
   </div>
-  <canvas id="canvas" width="800" height="500"></canvas>
 
-  <p id="debug-info">ここにデバッグ情報を出します</p>
-  <div id="pen"></div>
-  
+  <div id="canvas-wrapper" class="canvas-wrapper">
+    <canvas id="canvas" width="2000" height="2000"></canvas>
+  </div>
+
+  <h2>デバッグ用</h2>
+  <p id="debug-info">ここにデバッグ情報を出す</p>
+
   <h2>実装予定</h2>
   <dl>
     <dt>マウスで書けるようにする</dt>
     <dd>実装したぜ！！！！！！！！！</dd>
     <dt>iPad + Apple Pencil で書けるようにする</dt>
     <dd>実装したぜ！！！！！！！！！</dd>
+    <dt>指でスクロールできるようにする</dt>
+    <dd>実装したぜ！！！！！！！！！</dd>
     <dt>通信できるようにする</dt>
-    <dd>まだだよ</dd>
+    <dd>半分実装したぜ！！！！！！！！！でも入室するまでに描いていた絵は同期されないぞ！！！！！</dd>
     <dt>Undo できるようにする</dt>
     <dd>まだだよ</dd>
     <dt>消しゴムが使えるようにする</dt>
@@ -45,6 +50,7 @@
     <dt>UI をいい感じにする</dt>
     <dd>まだだよ</dd>
   </dl>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
   <script src="js/script.js"></script>
 </body>
 </html>
