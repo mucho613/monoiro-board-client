@@ -14,7 +14,7 @@
 
   canvas.addEventListener('touchmove', function(e) {
     e.preventDefault();
-  }, {passive: false});
+  }, { passive: false });
 
   //キャンバスの背景カラーを決定。 fillRectは長方形に塗るメソッド
   var ctx = canvas.getContext('2d');
