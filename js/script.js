@@ -2,8 +2,34 @@
   //HTML上の canvas タグを取得
   let canvas = document.getElementById('canvas');
 
+  let penBtn = document.getElementById('pen-btn');
+  let eraserBtn = document.getElementById('eraser-btn');
+  let allEraseBtn = document.getElementById('all-erase-btn');
+
+
+  let defaultColor = "#555555";
+  let defaultAlpha = 1.0;
+  let thicknessCoefficient = 1;
+
   let canvasWidth = 800;
   let canvasHeight = 500;
+
+  penBtn.addEventListener('click', (e) => {
+    thicknessCoefficient = 1;
+    defaultColor = "#555555";
+  });
+
+  eraserBtn.addEventListener('click', (e) => {
+    thicknessCoefficient = 4;
+    defaultColor = "#f5f5f5";
+  });
+
+  allEraseBtn.addEventListener('click', (e) => {
+    ctx.beginPath();
+    ctx.fillStyle = "#f5f5f5";
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+  });
+
 
   let penGrounded = false;
   let scrolled = false;
@@ -12,6 +38,8 @@
   let pointerY;
 
   let rectX = null, rectY;
+
+  let debug = true;
 
   let firstDraw = (e) => {
     let rect = e.target.getBoundingClientRect();
@@ -38,7 +66,7 @@
     let Y = ~~(e.clientY - rectY);
 
     if(penGrounded) {
-      draw(pointerX, pointerY, X, Y, 1);
+      draw(pointerX, pointerY, X, Y, 1 * thicknessCoefficient);
     }
 
     pointerX = X;
@@ -46,12 +74,14 @@
   });
 
   canvas.addEventListener('mouseup', (e) => {
+    if(debug) console.log(e);
+
     penGrounded = false;
 
     let X = ~~(e.clientX - rectX);
     let Y = ~~(e.clientY - rectY);
 
-    draw(pointerX, pointerY, X, Y, 1);
+    draw(pointerX, pointerY, X, Y, 1 * thicknessCoefficient);
   });
 
   canvas.addEventListener('touchstart', (e) => {
@@ -66,7 +96,7 @@
     let Y = ~~(e.changedTouches[0].clientY - rectY);
     let thickness = e.changedTouches[0].force;
 
-    draw(pointerX, pointerY, X, Y, thickness);
+    draw(pointerX, pointerY, X, Y, thickness * thicknessCoefficient);
 
     pointerX = X;
     pointerY = Y;
@@ -77,7 +107,7 @@
     let Y = ~~(e.changedTouches[0].clientY - rectY);
     let thickness = e.changedTouches[0].force;
 
-    draw(pointerX, pointerY, X, Y, thickness);
+    draw(pointerX, pointerY, X, Y, thickness * thicknessCoefficient);
   });
 
   // タッチされてもスクロールしないように
@@ -89,9 +119,6 @@
   ctx.beginPath();
   ctx.fillStyle = "#f5f5f5";
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-  let defaultColor = "#555555";
-  let defaultAlpha = 1.0;
 
   function draw(x1, y1, x2, y2, thickness) {
     ctx.beginPath();
