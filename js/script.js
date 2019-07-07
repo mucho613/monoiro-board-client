@@ -5,28 +5,65 @@
   let canvasWidth = 800;
   let canvasHeight = 500;
 
-  let thickness = 0;
-
   let penGrounded = false;
+  let scrolled = false;
 
   let pointerX;
   let pointerY;
 
-  canvas.addEventListener('touchstart', (e) => {
+  let rectX = null, rectY;
+
+  let firstDraw = (e) => {
     let rect = e.target.getBoundingClientRect();
+    rectX = rect.left;
+    rectY = rect.top;
+    scrolled = false;
+  }
+
+  window.addEventListener('scroll', (e) => {
+    scrolled = true;
+  });
+
+  canvas.addEventListener('mousedown', (e) => {
+    if(!rectX || scrolled) firstDraw(e);
+
     penGrounded = true;
 
-    pointerX = ~~(e.changedTouches[0].clientX - rect.left);
-    pointerY = ~~(e.changedTouches[0].clientY - rect.top);
+    pointerX = ~~(e.clientX - rectX);
+    pointerY = ~~(e.clientY - rectY);
+  });
+
+  canvas.addEventListener('mousemove', (e) => {
+    let X = ~~(e.clientX - rectX);
+    let Y = ~~(e.clientY - rectY);
+
+    if(penGrounded) {
+      draw(pointerX, pointerY, X, Y, 1);
+    }
+
+    pointerX = X;
+    pointerY = Y;
+  });
+
+  canvas.addEventListener('mouseup', (e) => {
+    penGrounded = false;
+
+    let X = ~~(e.clientX - rectX);
+    let Y = ~~(e.clientY - rectY);
+
+    draw(pointerX, pointerY, X, Y, 1);
+  });
+
+  canvas.addEventListener('touchstart', (e) => {
+    if(!rectX || scrolled) firstDraw(e);
+
+    pointerX = ~~(e.changedTouches[0].clientX - rectX);
+    pointerY = ~~(e.changedTouches[0].clientY - rectY);
   });
 
   canvas.addEventListener('touchmove', (e) => {
-    console.log(e);
-    let rect = e.target.getBoundingClientRect();
-    penGrounded = true;
-
-    let X = ~~(e.changedTouches[0].clientX - rect.left);
-    let Y = ~~(e.changedTouches[0].clientY - rect.top);
+    let X = ~~(e.changedTouches[0].clientX - rectX);
+    let Y = ~~(e.changedTouches[0].clientY - rectY);
     let thickness = e.changedTouches[0].force;
 
     draw(pointerX, pointerY, X, Y, thickness);
@@ -36,11 +73,8 @@
   });
 
   canvas.addEventListener('touchend', (e) => {
-    let rect = e.target.getBoundingClientRect();
-    penGrounded = false;
-
-    let X = ~~(e.changedTouches[0].clientX - rect.left);
-    let Y = ~~(e.changedTouches[0].clientY - rect.top);
+    let X = ~~(e.changedTouches[0].clientX - rectX);
+    let Y = ~~(e.changedTouches[0].clientY - rectY);
     let thickness = e.changedTouches[0].force;
 
     draw(pointerX, pointerY, X, Y, thickness);
