@@ -6,6 +6,8 @@
   let eraserBtn = document.getElementById('eraser-btn');
   let allEraseBtn = document.getElementById('all-erase-btn');
 
+  let debugInfo = document.getElementById('debug-info');
+
 
   let defaultColor = "#555555";
   let defaultAlpha = 1.0;
@@ -92,6 +94,14 @@
   });
 
   canvas.addEventListener('touchmove', (e) => {
+    debugInfo.innerHTML =
+      "touchType: " + e.touches[0].touchType +
+      "<br>radiusX: " + e.touches[0].radiusX +
+      "<br>radiusY: " + e.touches[0].radiusX +
+      "<br>angle: " + e.touches[0].rotationAngle +
+      "<br>azimuthAngle: " + e.touches[0].azimuthAngle +
+      "<br>altitudeAngle: " + e.touches[0].altitudeAngle;
+    // console.log(e);
     let X = ~~(e.changedTouches[0].clientX - rectX);
     let Y = ~~(e.changedTouches[0].clientY - rectY);
     let thickness = e.changedTouches[0].force;
