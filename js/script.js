@@ -8,6 +8,14 @@
 
   let debugInfo = document.getElementById('debug-info');
 
+  let pen = document.getElementById('pen');
+
+  canvas.addEventListener('touchmove', (e) => {    
+    let azimuthAngle = e.touches[0].azimuthAngle;
+    let altitudeAngle = e.touches[0].altitudeAngle;
+
+    pen.style.transform = `rotateZ(${azimuthAngle}) rotateY(${altitudeAngle})`;
+  });
 
   let defaultColor = "#555555";
   let defaultAlpha = 1.0;
@@ -87,6 +95,9 @@
   });
 
   canvas.addEventListener('touchstart', (e) => {
+    if(e.touches[0].touchType == 'direct') {
+      return;
+    }
     if(!rectX || scrolled) firstDraw(e);
 
     pointerX = ~~(e.changedTouches[0].clientX - rectX);
@@ -102,6 +113,9 @@
       "<br>azimuthAngle: " + e.touches[0].azimuthAngle +
       "<br>altitudeAngle: " + e.touches[0].altitudeAngle;
     // console.log(e);
+
+    if(e.touches[0].touchType == 'direct') return;
+
     let X = ~~(e.changedTouches[0].clientX - rectX);
     let Y = ~~(e.changedTouches[0].clientY - rectY);
     let thickness = e.changedTouches[0].force;
@@ -113,6 +127,8 @@
   });
 
   canvas.addEventListener('touchend', (e) => {
+    if(e.touches[0].touchType == 'direct') return;
+
     let X = ~~(e.changedTouches[0].clientX - rectX);
     let Y = ~~(e.changedTouches[0].clientY - rectY);
     let thickness = e.changedTouches[0].force;
