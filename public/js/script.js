@@ -18,7 +18,7 @@
 
   let pen = document.getElementById('pen');
 
-  let socket = io.connect('http://198.13.35.247:8080');
+  let socket = io.connect('http://198.13.35.247');
 
   canvas.addEventListener('touchmove', (e) => {    
     let azimuthAngle = e.touches[0].azimuthAngle || 0;
@@ -123,13 +123,17 @@
   });
 
   canvas.addEventListener('touchmove', (e) => {
+    let touch = e.touches[0];
+
     debugInfo.innerHTML =
-      "touchType: " + e.touches[0].touchType +
-      "<br>radiusX: " + e.touches[0].radiusX +
-      "<br>radiusY: " + e.touches[0].radiusX +
-      "<br>angle: " + e.touches[0].rotationAngle +
-      "<br>azimuthAngle: " + e.touches[0].azimuthAngle +
-      "<br>altitudeAngle: " + e.touches[0].altitudeAngle;
+      "touchType: " + touch.touchType +
+      "<br>clientX: " + touch.clientX +
+      "<br>clientY: " + touch.clientY +
+      "<br>radiusX: " + touch.radiusX +
+      "<br>radiusY: " + touch.radiusY +
+      "<br>angle: " + touch.rotationAngle +
+      "<br>azimuthAngle: " + touch.azimuthAngle +
+      "<br>altitudeAngle: " + touch.altitudeAngle;
 
     if(e.touches[0].touchType == 'direct') {
       canvas.removeEventListener('touchmove', stopScroll);

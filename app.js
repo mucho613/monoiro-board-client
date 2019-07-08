@@ -4,7 +4,7 @@ const path = require('path');
 
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
-const PORT = process.env.Port || 8080;
+const PORT = process.env.Port || 80;
 
 http.listen(PORT, () => {
   console.log('Running at Port ' + PORT);

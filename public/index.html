@@ -13,43 +13,49 @@
 <body>
   <div class="overlay">
     <h1>MONOIRO Oekaki Chat</h1>
-    <p>名前は仮。いい名前募集中！</p>
+    <p>名前は仮です。いい名前募集中！</p>
 
-    <button id="pen-btn">ペン</button>
-    <button id="eraser-btn">消しゴム</button>
-    <button id="all-erase-btn">全消去</button>
+    <button id="pen-btn">🖊ペン</button>
+    <button id="eraser-btn">✨消しゴム</button>
+    <button id="all-erase-btn">💣全消去</button>
   </div>
 
   <div id="canvas-wrapper" class="canvas-wrapper">
     <canvas id="canvas" width="2000" height="2000"></canvas>
   </div>
 
-  <h2>デバッグ用</h2>
-  <p id="debug-info">ここにデバッグ情報を出す</p>
+  <section>
+    <h2>デバッグ情報</h2>
+    <p id="debug-info">ペンや指で描いたときに、ここにデバッグ情報が表示されます。<br>Apple Pencil だとペンの向きとか傾きまで豊富に出てきます</p>
 
-  <h2>実装予定</h2>
-  <dl>
-    <dt>マウスで書けるようにする</dt>
-    <dd>実装したぜ！！！！！！！！！</dd>
-    <dt>iPad + Apple Pencil で書けるようにする</dt>
-    <dd>実装したぜ！！！！！！！！！</dd>
-    <dt>指でスクロールできるようにする</dt>
-    <dd>実装したぜ！！！！！！！！！</dd>
-    <dt>通信できるようにする</dt>
-    <dd>半分実装したぜ！！！！！！！！！でも入室するまでに描いていた絵は同期されないぞ！！！！！</dd>
-    <dt>Undo できるようにする</dt>
-    <dd>まだだよ</dd>
-    <dt>消しゴムが使えるようにする</dt>
-    <dd>スーパー突貫工事で実装したぜ！！！！！！！！！</dd>
-    <dt>ペンの太さを変えられるようにする</dt>
-    <dd>まだだよ</dd>
-    <dt>レイヤーが使えるようにする(要望より)</dt>
-    <dd>まだだよ</dd>
-    <dt>レイヤーを乗算で合成できるようにする(要望より)</dt>
-    <dd>まだだよ</dd>
-    <dt>UI をいい感じにする</dt>
-    <dd>まだだよ</dd>
-  </dl>
+    <h2>機能一覧・実装予定</h2>
+    <dl>
+      <dt>筆圧感知</dt>
+      <dd>実装したぜ！！！！！！！！！</dd>
+      <dt>マウスで描けるようにする</dt>
+      <dd>実装したぜ！！！！！！！！！</dd>
+      <dt>iPad + Apple Pencil で描けるようにする</dt>
+      <dd>実装したぜ！！！！！！！！！</dd>
+      <dt>指でスクロールできるようにする</dt>
+      <dd>実装したぜ！！！！！！！！！</dd>
+      <dt>通信できるようにする</dt>
+      <dd>半分実装したぜ！！今のところ入室するまでに描かれていた絵は同期されない 許せ</dd>
+      <dt>下に無限にスクロールできるようにする</dt>
+      <dd>まだだよ これやるためにこのアプリ作ってるので絶対やりたい</dd>
+      <dt>Undo / Redo できるようにする</dt>
+      <dd>まだだよ 間違いなく最も面倒くさい 正直全くやりたくない</dd>
+      <dt>消しゴムが使えるようにする</dt>
+      <dd>スーパー突貫工事で実装したぜ！！！！！！！！！</dd>
+      <dt>ペンの太さを変えられるようにする</dt>
+      <dd>まだだよ</dd>
+      <dt>レイヤーが使えるようにする(要望より)</dt>
+      <dd>まだだよ</dd>
+      <dt>レイヤーを乗算で合成できるようにする(要望より)</dt>
+      <dd>まだだよ</dd>
+      <dt>UI をいい感じにする</dt>
+      <dd>まだだよ</dd>
+    </dl>
+  </section>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
   <script src="js/script.js"></script>
 </body>
