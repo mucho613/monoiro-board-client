@@ -1,9 +1,55 @@
 (function() {
+  var downloadLink = document.getElementById('download_link');
+  var filename = 'monoiro-board.png';
+  var dlButton = document.getElementById('download_button');
+
+  // 強制リロードさせてキャッシュクリア
   window.onpageshow = function(event) {
     if (event.persisted) {
       window.location.reload()
     }
   };
+
+  const pickr = Pickr.create({
+    el: '.color-picker',
+    theme: 'nano', // or 'monolith', or 'nano'
+
+    swatches: [
+      'rgba(244, 67, 54, 1)',
+      'rgba(233, 30, 99, 0.95)',
+      'rgba(156, 39, 176, 0.9)',
+      'rgba(103, 58, 183, 0.85)',
+      'rgba(63, 81, 181, 0.8)',
+      'rgba(33, 150, 243, 0.75)',
+      'rgba(3, 169, 244, 0.7)',
+      'rgba(0, 188, 212, 0.7)',
+      'rgba(0, 150, 136, 0.75)',
+      'rgba(76, 175, 80, 0.8)',
+      'rgba(139, 195, 74, 0.85)',
+      'rgba(205, 220, 57, 0.9)',
+      'rgba(255, 235, 59, 0.95)',
+      'rgba(255, 193, 7, 1)'
+    ],
+
+    components: {
+        // Main components
+        preview: true,
+        opacity: true,
+        hue: true,
+
+        // Input / output Options
+        interaction: {
+          hex: true,
+          rgba: true,
+          hsla: true,
+          hsva: false,
+          cmyk: false,
+          input: true,
+          clear: false,
+          save: true
+        }
+      }
+  });
 
   //HTML上の canvas タグを取得
   let canvas = document.getElementById('canvas');
@@ -12,45 +58,82 @@
   let eraserBtn = document.getElementById('eraser-btn');
   let allEraseBtn = document.getElementById('all-erase-btn');
 
+  let fullScreenButton = document.getElementById('fullscreen-button');
+
   let canvasWrapper = document.getElementById('canvas-wrapper');
 
-  let debugInfo = document.getElementById('debug-info');
-
-  let pen = document.getElementById('pen');
-
-  let socket = io.connect('http://198.13.35.247');
-
-  canvas.addEventListener('touchmove', (e) => {    
-    let azimuthAngle = e.touches[0].azimuthAngle || 0;
-    let altitudeAngle = e.touches[0].altitudeAngle || 0;
+  let splash = document.getElementById('splash');
+  // let debugInfo = document.getElementById('debug-info');
+  let splashClose = document.getElementById('splash-close');
+  splashClose.addEventListener('click', () => {
+    splash.parentNode.removeChild(splash);
   });
 
-  let defaultColor = "#555555";
+  let pen = document.getElementById('pen'); 
+  let leftySwitch = document.getElementById('lefty-switch');
+  let ui = document.getElementById('ui');
+
+  let socket = io.connect('http://monoiro-board.club');
+
+  let initImage = '';
+
+  penBtn.classList.add("active");
+
+  dlButton.addEventListener('click', function(){
+    downloadLink.href = canvas.toDataURL('image/png');
+    downloadLink.download = "monoiro.png";
+    downloadLink.click();
+  });
+
+  let penColor = "#555555"; // デフォルト
+  let drawColor = penColor;
   let defaultAlpha = 1.0;
+
   let thicknessCoefficient = 4;
 
   let canvasWidth = 2000;
   let canvasHeight = 2000;
+
+  let penThicknessSlider = document.getElementById('pen-thickness');
+
+  leftySwitch.addEventListener('change', (e) => {
+    if(e.target.checked) ui.classList.add("lefty");
+    else ui.classList.remove("lefty");
+  });
+  
+  penThicknessSlider.addEventListener('change', (e) => {
+    thicknessCoefficient = e.target.value;
+  });
+
+  pickr.on('init', (instance) => {
+  }).on('change', (color) => {
+    penColor = color.toHEXA().toString();
+    drawColor = penColor;
+  }).on('swatchselect', (color) => {
+    penColor = color.toHEXA().toString();
+    drawColor = penColor;
+  });
 
   let stopScroll = function(e) {
     e.preventDefault();
   }
 
   penBtn.addEventListener('click', (e) => {
-    thicknessCoefficient = 4;
-    defaultColor = "#555555";
+    drawColor = penColor;
+    penBtn.classList.add("active");
+    eraserBtn.classList.remove("active");
   });
 
   eraserBtn.addEventListener('click', (e) => {
-    thicknessCoefficient = 32;
-    defaultColor = "#f5f5f5";
+    drawColor = "#f5f5f5";
+    penBtn.classList.remove("active");
+    eraserBtn.classList.add("active");
   });
 
   allEraseBtn.addEventListener('click', (e) => {
     allClear();
     socket.emit('clear send');
   });
-
 
   let penGrounded = false;
   let scrolled = false;
@@ -93,7 +176,7 @@
     let Y = ~~(e.clientY - rectY);
 
     if(penGrounded) {
-      draw(pointerX, pointerY, X, Y, 1 * thicknessCoefficient);
+      draw(pointerX, pointerY, X, Y, 0.1 * thicknessCoefficient);
     }
 
     pointerX = X;
@@ -101,17 +184,18 @@
   });
 
   canvas.addEventListener('mouseup', (e) => {
-    if(debug) console.log(e);
-
     penGrounded = false;
 
     let X = ~~(e.clientX - rectX);
     let Y = ~~(e.clientY - rectY);
 
-    draw(pointerX, pointerY, X, Y, 1 * thicknessCoefficient);
+    draw(pointerX, pointerY, X, Y, 0.1 * thicknessCoefficient);
+
+    console.log("mouseup");
   });
 
   canvas.addEventListener('touchstart', (e) => {
+    console.log(e);
     if(e.touches[0].touchType == 'direct') {
       canvas.removeEventListener('touchmove', stopScroll);
       return;
@@ -122,30 +206,41 @@
     pointerY = ~~(e.changedTouches[0].clientY - rectY);
   });
 
+  let prevForce = 0;
+  let firstTouch = true;
+
   canvas.addEventListener('touchmove', (e) => {
+    console.log(e);
     let touch = e.touches[0];
 
-    debugInfo.innerHTML =
-      "touchType: " + touch.touchType +
-      "<br>clientX: " + touch.clientX +
-      "<br>clientY: " + touch.clientY +
-      "<br>radiusX: " + touch.radiusX +
-      "<br>radiusY: " + touch.radiusY +
-      "<br>angle: " + touch.rotationAngle +
-      "<br>azimuthAngle: " + touch.azimuthAngle +
-      "<br>altitudeAngle: " + touch.altitudeAngle;
-
-    if(e.touches[0].touchType == 'direct') {
+    if(e.changedTouches[0].touchType == 'direct') {
       canvas.removeEventListener('touchmove', stopScroll);
       return;
-    } else if(e.touches[0].touchType == 'stylus') {
+    } else if(e.changedTouches[0].touchType == 'stylus') {
       canvas.addEventListener('touchmove', stopScroll, { passive: false });
     }
 
     let X = ~~(e.changedTouches[0].clientX - rectX);
     let Y = ~~(e.changedTouches[0].clientY - rectY);
-    let thickness = e.changedTouches[0].force;
 
+    let thickness;
+    if(firstTouch) {
+      thickness = 0;
+      prevForce = 0;
+      firstTouch = false;
+    }
+    else {
+      let currentForce = e.changedTouches[0].force;
+      if(currentForce - prevForce > 0.01) {
+        thickness = prevForce + 0.01;
+        prevForce = prevForce + 0.01;
+      }
+      else {
+        thickness = currentForce;
+        prevForce = currentForce;
+      }
+    }
+    
     draw(pointerX, pointerY, X, Y, thickness * thicknessCoefficient);
 
     pointerX = X;
@@ -153,16 +248,32 @@
   });
 
   canvas.addEventListener('touchend', (e) => {
-    if(e.touches[0].touchType == 'direct') {
-      canvas.removeEventListener('touchmove', stopScroll);
-      return;
-    } else if(e.touches[0].touchType == 'stylus') {
-      canvas.addEventListener('touchmove', stopScroll, { passive: false });
-    }
+    console.log(e);
+    if(e.changedTouches[0].touchType !== undefined) {
+      if(e.changedTouches[0].touchType == 'direct') {
+        canvas.removeEventListener('touchmove', stopScroll);
+        return;
+      } else if(e.changedTouches[0].touchType == 'stylus') {
+        canvas.addEventListener('touchmove', stopScroll, { passive: false });
+      }
+    } 
+
+    firstTouch = true;
 
     let X = ~~(e.changedTouches[0].clientX - rectX);
     let Y = ~~(e.changedTouches[0].clientY - rectY);
-    let thickness = e.changedTouches[0].force;
+
+    let currentForce = e.changedTouches[0].force;
+    if(currentForce - prevForce > 0.01) {
+      thickness = prevForce + 0.01;
+      prevForce = prevForce + 0.01;
+    }
+    else {
+      thickness = currentForce;
+      prevForce = currentForce;
+    }
+
+    console.log(thickness);
 
     draw(pointerX, pointerY, X, Y, thickness * thicknessCoefficient);
   });
@@ -172,8 +283,19 @@
   ctx.fillStyle = "#f5f5f5";
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
+  socket.on('init', function (base64) {
+    initImage = base64.imageData;
+
+    let img = new Image();
+    img.src = initImage;
+    setTimeout(() => { ctx.drawImage(img, 0, 0); }, 500);
+  });
+
   socket.on('send user', function (msg) {
-    drawCore(msg.x1, msg.y1, msg.x2, msg.y2, msg.color, msg.thickness);
+    // これを消すとタピオカ現象が発生する！絶対に残すこと！！！！！！
+    if(msg.thickness !== 0) {
+      drawCore(msg.x1, msg.y1, msg.x2, msg.y2, msg.color, msg.thickness);
+    }
   });
 
   socket.on('clear user', () => {
@@ -181,8 +303,10 @@
   });
 
   function draw(x1, y1, x2, y2, thickness) {
-    socket.emit('server send', { x1: x1, y1: y1, x2: x2, y2: y2, color: defaultColor, thickness: thickness});
-    drawCore(x1, y1, x2, y2, defaultColor, thickness);
+    if(thickness !== 0) {
+      socket.emit('server send', { x1: x1, y1: y1, x2: x2, y2: y2, color: drawColor, thickness: thickness});
+      drawCore(x1, y1, x2, y2, drawColor, thickness);
+    }
   };
 
   function drawCore(x1, y1, x2, y2, color, thickness) {

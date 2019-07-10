@@ -8,10 +8,33 @@ h1 {
   font-family: 'Montserrat', sans-serif;
 }
 
+.strike {
+  text-decoration: line-through;
+}
+
+.splash {
+  width: 50%;
+  margin: 10% auto 0;
+  border: #ccc 2px solid;
+  border-radius: 16px;
+  text-align: center;
+  background-color: #ffffffee;
+  padding: 30px;
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  right: 0;
+}
+
 .canvas-wrapper {
   width: 100%;
-  height: 80vh;
+  height: 100vh;
   overflow: scroll;
+}
+
+.japanese {
+  font-size: 1em;
+  margin-top: 0;
 }
 
 section {
@@ -32,4 +55,35 @@ dd {
   background-color: rgba(240, 192, 104, 0.363);
   padding: 20px;
   margin: 20px;
+}
+
+.overlay.lefty {
+  right: 20px;
+}
+
+.overlay button {
+  display: block;
+  height: 40px; 
+  width: 150px;
+  margin-bottom: 8px;
+}
+
+.tool-button.active {
+  border: 4px orange solid;
+}
+
+.all-erase-btn {
+  position: relative;
+}
+
+.all-erase-btn::after {
+  width: 67px;
+  height: 30px;
+  border: 0px;
+  content: "";
+  background: url(../img/allclear.png) left top no-repeat;
+  background-size: contain;
+  position: absolute;
+  left: 10px;
+  top: 4px;
 }
