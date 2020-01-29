@@ -18,24 +18,28 @@
   <div class="splash" id="splash">
     <h1>MONOIRO Board</h1>
     <p class="japanese">
-      モノイロボード 略してモノボ<br>
-      液ダレ現象が治ったよ！！！！<br>
-      半透明な線を引けるようになるまでしばらく待ってね<br>
-      全消去ボタンは間違えて押すと危ないので無効化してます
+      モノイロボード 略してモノボ
     </p>
     <button id="splash-close">閉じる</button>
   </div>
 
   <div id="ui" class="overlay">
-    <a id="download_link"></a>
-    <button class="tool-button" id="pen-btn">🖊ペン</button>
-    <button class="tool-button" id="eraser-btn">✨消しゴム</button>
+    <a id="download-link"></a>
+    <button class="tool-button pen-btn" id="pen-btn">ペン</button>
+    <button class="tool-button eraser-btn" id="eraser-btn">消しゴム</button>
     <button class="tool-button all-erase-btn" id="all-erase-btn" disabled>全消し</button>
-    <button id="download_button">ダウンロードする</button>
+    <button id="download-button">ダウンロード</button>
     <div class="color-picker"></div>
 
-    太さ
-    <input id="pen-thickness" value="4" type="range" min="1" max="64">
+    <div>
+      <div>ペンの太さ: <span id="pen-thickness-indicator"></span></div>
+      <input id="pen-thickness" value="16" type="range" min="16" max="256">
+    </div>
+
+    <div>
+      <div>消しゴムの太さ: <span id="eraser-thickness-indicator"></span></div>
+      <input id="eraser-thickness" value="64" type="range" min="32" max="512">
+    </div>
 
     <div>
       <input id="lefty-switch" type="checkbox" value="1">左利き

@@ -15,10 +15,9 @@ h1 {
 .splash {
   width: 50%;
   margin: 10% auto 0;
-  border: #ccc 2px solid;
-  border-radius: 16px;
+  box-shadow: 0 4px 4px #ccc;
   text-align: center;
-  background-color: #ffffffee;
+  background-color: #ffffffd5;
   padding: 30px;
   position: absolute;
   z-index: 1;
@@ -52,38 +51,62 @@ dd {
 
 .overlay {
   position: absolute;
-  background-color: rgba(240, 192, 104, 0.363);
+  background-color: rgba(207, 207, 207, 0.514);
   padding: 20px;
-  margin: 20px;
+  margin: 20px 0 0 0;
+  border-radius: 0 10px 10px 0;
+  box-shadow: 0 0 8px rgb(218, 218, 218);
 }
 
 .overlay.lefty {
-  right: 20px;
+  right: 0;
 }
 
 .overlay button {
+  background-color: white;
   display: block;
   height: 40px; 
   width: 150px;
   margin-bottom: 8px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  padding: 0;
+  text-align: left;
+  padding-left: 32%;
+  appearance: none;
 }
 
 .tool-button.active {
-  border: 4px orange solid;
+  background-color: rgb(255, 219, 118);
 }
 
-.all-erase-btn {
+.pen-btn, .eraser-btn, .all-erase-btn {
   position: relative;
 }
 
-.all-erase-btn::after {
+.pen-btn::after, .eraser-btn::after, .all-erase-btn::after {
   width: 67px;
   height: 30px;
   border: 0px;
   content: "";
-  background: url(../img/allclear.png) left top no-repeat;
-  background-size: contain;
   position: absolute;
   left: 10px;
   top: 4px;
+} 
+
+.pen-btn::after {
+  background: url(../img/pen.png) left top no-repeat;
+  background-size: contain;
+}
+
+.eraser-btn::after {
+  background: url(../img/eraser.png) left top no-repeat;
+  background-size: contain;
+}
+
+.all-erase-btn::after {
+  background: url(../img/allerase.png) left top no-repeat;
+  background-size: contain;
 }

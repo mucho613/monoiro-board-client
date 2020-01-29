@@ -1,10 +1,9 @@
 (function() {
-  var downloadLink = document.getElementById('download_link');
-  var filename = 'monoiro-board.png';
-  var dlButton = document.getElementById('download_button');
+  var downloadLink = document.getElementById('download-link');
+  var dlButton = document.getElementById('download-button');
 
   // 強制リロードさせてキャッシュクリア
-  window.onpageshow = function(event) {
+  window.onpageshow = event => {
     if (event.persisted) {
       window.location.reload()
     }
@@ -58,8 +57,6 @@
   let eraserBtn = document.getElementById('eraser-btn');
   let allEraseBtn = document.getElementById('all-erase-btn');
 
-  let fullScreenButton = document.getElementById('fullscreen-button');
-
   let canvasWrapper = document.getElementById('canvas-wrapper');
 
   let splash = document.getElementById('splash');
@@ -69,7 +66,6 @@
     splash.parentNode.removeChild(splash);
   });
 
-  let pen = document.getElementById('pen'); 
   let leftySwitch = document.getElementById('lefty-switch');
   let ui = document.getElementById('ui');
 
@@ -89,48 +85,66 @@
   let drawColor = penColor;
   let defaultAlpha = 1.0;
 
-  let thicknessCoefficient = 4;
+  let penThicknessCoefficient = 8;
+  let eraserThicknessCoefficient = 64;
+  let thicknessCoefficient = penThicknessCoefficient;
 
   let canvasWidth = 2000;
   let canvasHeight = 2000;
 
   let penThicknessSlider = document.getElementById('pen-thickness');
+  let eraserThicknessSlider = document.getElementById('eraser-thickness');
 
-  leftySwitch.addEventListener('change', (e) => {
+  leftySwitch.addEventListener('change', e => {
     if(e.target.checked) ui.classList.add("lefty");
     else ui.classList.remove("lefty");
   });
   
-  penThicknessSlider.addEventListener('change', (e) => {
-    thicknessCoefficient = e.target.value;
+  penThicknessSlider.addEventListener('change', e => {
+    penThicknessCoefficient = e.target.value;
+    thicknessCoefficient = penThicknessCoefficient;
   });
 
-  pickr.on('init', (instance) => {
-  }).on('change', (color) => {
+  eraserThicknessSlider.addEventListener('change', e => {
+    eraserThicknessCoefficient = e.target.value;
+    thicknessCoefficient = eraserThicknessCoefficient;
+  });
+
+  pickr.on('init', instance => {
+  }).on('change', color => {
     penColor = color.toHEXA().toString();
     drawColor = penColor;
-  }).on('swatchselect', (color) => {
+  }).on('swatchselect', color => {
     penColor = color.toHEXA().toString();
     drawColor = penColor;
   });
 
-  let stopScroll = function(e) {
+  let stopScroll = e => {
     e.preventDefault();
   }
 
-  penBtn.addEventListener('click', (e) => {
+  let thicknessCoefficientUpdate = value => {
+    thicknessCoefficient = value;
+    console.log(value);
+  }
+
+  penBtn.addEventListener('click', e => {
     drawColor = penColor;
     penBtn.classList.add("active");
     eraserBtn.classList.remove("active");
+
+    thicknessCoefficientUpdate(penThicknessCoefficient);
   });
 
-  eraserBtn.addEventListener('click', (e) => {
+  eraserBtn.addEventListener('click', e => {
     drawColor = "#f5f5f5";
     penBtn.classList.remove("active");
     eraserBtn.classList.add("active");
+
+    thicknessCoefficientUpdate(eraserThicknessCoefficient);
   });
 
-  allEraseBtn.addEventListener('click', (e) => {
+  allEraseBtn.addEventListener('click', e => {
     allClear();
     socket.emit('clear send');
   });
@@ -143,26 +157,24 @@
 
   let rectX = null, rectY;
 
-  let debug = true;
-
-  let firstDraw = (e) => {
+  let firstDraw = e => {
     let rect = e.target.getBoundingClientRect();
     rectX = rect.left;
     rectY = rect.top;
     scrolled = false;
   }
 
-  window.addEventListener('scroll', (e) => {
+  window.addEventListener('scroll', e => {
     scrolled = true;
   });
 
-  canvasWrapper.addEventListener('scroll', (e) => {
+  canvasWrapper.addEventListener('scroll', e => {
     scrolled = true;
   });
 
   canvas.addEventListener('touchmove', stopScroll, { passive: false });
 
-  canvas.addEventListener('mousedown', (e) => {
+  canvas.addEventListener('mousedown', e => {
     if(!rectX || scrolled) firstDraw(e);
 
     penGrounded = true;
@@ -171,11 +183,12 @@
     pointerY = ~~(e.clientY - rectY);
   });
 
-  canvas.addEventListener('mousemove', (e) => {
+  canvas.addEventListener('mousemove', e => {
     let X = ~~(e.clientX - rectX);
     let Y = ~~(e.clientY - rectY);
 
     if(penGrounded) {
+      console.log(thicknessCoefficient);
       draw(pointerX, pointerY, X, Y, 0.1 * thicknessCoefficient);
     }
 
@@ -183,19 +196,16 @@
     pointerY = Y;
   });
 
-  canvas.addEventListener('mouseup', (e) => {
+  canvas.addEventListener('mouseup', e => {
     penGrounded = false;
 
     let X = ~~(e.clientX - rectX);
     let Y = ~~(e.clientY - rectY);
 
     draw(pointerX, pointerY, X, Y, 0.1 * thicknessCoefficient);
-
-    console.log("mouseup");
   });
 
-  canvas.addEventListener('touchstart', (e) => {
-    console.log(e);
+  canvas.addEventListener('touchstart', e => {
     if(e.touches[0].touchType == 'direct') {
       canvas.removeEventListener('touchmove', stopScroll);
       return;
@@ -209,8 +219,7 @@
   let prevForce = 0;
   let firstTouch = true;
 
-  canvas.addEventListener('touchmove', (e) => {
-    console.log(e);
+  canvas.addEventListener('touchmove', e => {
     let touch = e.touches[0];
 
     if(e.changedTouches[0].touchType == 'direct') {
@@ -247,8 +256,7 @@
     pointerY = Y;
   });
 
-  canvas.addEventListener('touchend', (e) => {
-    console.log(e);
+  canvas.addEventListener('touchend', e => {
     if(e.changedTouches[0].touchType !== undefined) {
       if(e.changedTouches[0].touchType == 'direct') {
         canvas.removeEventListener('touchmove', stopScroll);
@@ -273,8 +281,6 @@
       prevForce = currentForce;
     }
 
-    console.log(thickness);
-
     draw(pointerX, pointerY, X, Y, thickness * thicknessCoefficient);
   });
 
@@ -283,7 +289,7 @@
   ctx.fillStyle = "#f5f5f5";
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-  socket.on('init', function (base64) {
+  socket.on('init', base64 => {
     initImage = base64.imageData;
 
     let img = new Image();
@@ -291,8 +297,8 @@
     setTimeout(() => { ctx.drawImage(img, 0, 0); }, 500);
   });
 
-  socket.on('send user', function (msg) {
-    // これを消すとタピオカ現象が発生する！絶対に残すこと！！！！！！
+  socket.on('send user', msg => {
+    // これを消すとタピオカ現象が発生する！なぜ？？？？？？？？？？？？？？？
     if(msg.thickness !== 0) {
       drawCore(msg.x1, msg.y1, msg.x2, msg.y2, msg.color, msg.thickness);
     }
