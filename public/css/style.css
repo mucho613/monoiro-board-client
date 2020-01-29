@@ -29,6 +29,14 @@ h1 {
   width: 100%;
   height: 100vh;
   overflow: scroll;
+  position: relative;
+}
+
+#pen {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
 }
 
 .japanese {
@@ -56,6 +64,7 @@ dd {
   margin: 20px 0 0 0;
   border-radius: 0 10px 10px 0;
   box-shadow: 0 0 8px rgb(218, 218, 218);
+  z-index: 1; 
 }
 
 .overlay.lefty {
