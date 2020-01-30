@@ -52,6 +52,7 @@
 
   //HTML上の canvas タグを取得
   let canvas = document.getElementById('canvas');
+  let pen = document.getElementById('pen');
 
   let penBtn = document.getElementById('pen-btn');
   let eraserBtn = document.getElementById('eraser-btn');
@@ -125,7 +126,6 @@
 
   let thicknessCoefficientUpdate = value => {
     thicknessCoefficient = value;
-    console.log(value);
   }
 
   penBtn.addEventListener('click', e => {
@@ -188,7 +188,6 @@
     let Y = ~~(e.clientY - rectY);
 
     if(penGrounded) {
-      console.log(thicknessCoefficient);
       draw(pointerX, pointerY, X, Y, 0.1 * thicknessCoefficient);
     }
 
@@ -214,6 +213,8 @@
 
     pointerX = ~~(e.changedTouches[0].clientX - rectX);
     pointerY = ~~(e.changedTouches[0].clientY - rectY);
+
+    showPen(pointerX, pointerY, e.touches[0].altitudeAngle, e.touches[0].azimuthAngle);
   });
 
   let prevForce = 0;
@@ -251,6 +252,7 @@
     }
     
     draw(pointerX, pointerY, X, Y, thickness * thicknessCoefficient);
+    showPen(X, Y, e.changedTouches[0].altitudeAngle, e.changedTouches[0].azimuthAngle);
 
     pointerX = X;
     pointerY = Y;
@@ -282,9 +284,11 @@
     }
 
     draw(pointerX, pointerY, X, Y, thickness * thicknessCoefficient);
+    showPen(X, Y, e.changedTouches[0].altitudeAngle, e.changedTouches[0].azimuthAngle);
   });
 
   let ctx = canvas.getContext('2d');
+  let penContext = pen.getContext('2d');
   ctx.beginPath();
   ctx.fillStyle = "#f5f5f5";
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
@@ -325,8 +329,26 @@
     ctx.lineWidth = thickness;
     ctx.strokeStyle = color;
 
+    erase();
+
     ctx.stroke();
   };
+
+  function showPen(x, y, altitudeAngle, azimuthAngle) {
+    let penLength = 100;
+    penContext.beginPath();
+    penContext.moveTo(x, y);
+    penContext.lineTo(
+      Math.cos(azimuthAngle) * (x + penLength * Math.cos(altitudeAngle)) - Math.sin(azimuthAngle) * (y + penLength * Math.cos(altitudeAngle)),
+      Math.sin(azimuthAngle) * (x + penLength * Math.cos(altitudeAngle)) + Math.cos(azimuthAngle) * (y + penLength * Math.cos(altitudeAngle))
+    );
+    penContext.stroke();
+  }
+
+  function erase() {
+    penContext.beginPath();
+    penContext.clearRect(0, 0, canvasWidth, canvasHeight);
+  }
 
   function allClear() {
     ctx.beginPath();
