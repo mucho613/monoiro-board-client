@@ -1,0 +1,17 @@
+{
+  "projects": {
+    "default": "monoiro-board"
+  },
+  "targets": {
+    "monoiro-board": {
+      "hosting": {
+        "production": [
+          "monoiro-board"
+        ],
+        "staging": [
+          "monoiro-board-staging"
+        ]
+      }
+    }
+  }
+}
