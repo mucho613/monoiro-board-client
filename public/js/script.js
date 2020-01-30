@@ -69,7 +69,7 @@
   let leftySwitch = document.getElementById('lefty-switch');
   let ui = document.getElementById('ui');
 
-  let socket = io.connect('http://monoiro-board.club');
+  let socket = io.connect('https://mucho613.space:8080');
 
   let initImage = '';
 
