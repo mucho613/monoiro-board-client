@@ -6,16 +6,28 @@ import Pickr from '@simonwep/pickr/dist/pickr.es5.min';
 import '@simonwep/pickr/dist/themes/nano.min.css';
 
 class App extends React.Component {
+  canvas;
+
+  constructor() {
+    super();
+    
+    this.download = this.download.bind(this);
+  }
+
+  download() {
+    const downloadLink = document.getElementById('download-link');
+
+    downloadLink.href = this.canvas.toDataURL('image/png');
+    downloadLink.download = "monoiro.png";
+    downloadLink.click();
+  }
+
   componentDidMount() {
-    var downloadLink = document.getElementById('download-link');
-    var dlButton = document.getElementById('download-button');
+    //HTML上の canvas タグを取得
+    this.canvas = document.getElementById('canvas');
 
     // 強制リロードさせてキャッシュクリア
-    window.onpageshow = event => {
-      if (event.persisted) {
-        window.location.reload()
-      }
-    };
+    window.onpageshow = e => e.persisted ? window.location.reload() : null;
 
     const pickr = Pickr.create({
       el: '.color-picker',
@@ -58,9 +70,6 @@ class App extends React.Component {
         }
     });
 
-    //HTML上の canvas タグを取得
-    let canvas = document.getElementById('canvas');
-
     let penBtn = document.getElementById('pen-btn');
     let eraserBtn = document.getElementById('eraser-btn');
     let allEraseBtn = document.getElementById('all-erase-btn');
@@ -83,11 +92,6 @@ class App extends React.Component {
 
     penBtn.classList.add("active");
 
-    dlButton.addEventListener('click', function(){
-      downloadLink.href = canvas.toDataURL('image/png');
-      downloadLink.download = "monoiro.png";
-      downloadLink.click();
-    });
 
     let penColor = "#555555"; // デフォルト
     let drawColor = penColor;
@@ -179,9 +183,9 @@ class App extends React.Component {
       scrolled = true;
     });
 
-    canvas.addEventListener('touchmove', stopScroll, { passive: false });
+    this.canvas.addEventListener('touchmove', stopScroll, { passive: false });
 
-    canvas.addEventListener('mousedown', e => {
+    this.canvas.addEventListener('mousedown', e => {
       if(!rectX || scrolled) firstDraw(e);
 
       penGrounded = true;
@@ -190,7 +194,7 @@ class App extends React.Component {
       pointerY = ~~(e.clientY - rectY);
     });
 
-    canvas.addEventListener('mousemove', e => {
+    this.canvas.addEventListener('mousemove', e => {
       let X = ~~(e.clientX - rectX);
       let Y = ~~(e.clientY - rectY);
 
@@ -202,7 +206,7 @@ class App extends React.Component {
       pointerY = Y;
     });
 
-    canvas.addEventListener('mouseup', e => {
+    this.canvas.addEventListener('mouseup', e => {
       penGrounded = false;
 
       let X = ~~(e.clientX - rectX);
@@ -211,9 +215,9 @@ class App extends React.Component {
       draw(pointerX, pointerY, X, Y, 0.1 * thicknessCoefficient);
     });
 
-    canvas.addEventListener('touchstart', e => {
+    this.canvas.addEventListener('touchstart', e => {
       if(e.touches[0].touchType === 'direct') {
-        canvas.removeEventListener('touchmove', stopScroll);
+        this.canvas.removeEventListener('touchmove', stopScroll);
         return;
       }
       if(!rectX || scrolled) firstDraw(e);
@@ -225,12 +229,12 @@ class App extends React.Component {
     let prevForce = 0;
     let firstTouch = true;
 
-    canvas.addEventListener('touchmove', e => {
+    this.canvas.addEventListener('touchmove', e => {
       if(e.changedTouches[0].touchType === 'direct') {
-        canvas.removeEventListener('touchmove', stopScroll);
+        this.canvas.removeEventListener('touchmove', stopScroll);
         return;
       } else if(e.changedTouches[0].touchType === 'stylus') {
-        canvas.addEventListener('touchmove', stopScroll, { passive: false });
+        this.canvas.addEventListener('touchmove', stopScroll, { passive: false });
       }
 
       let X = ~~(e.changedTouches[0].clientX - rectX);
@@ -260,13 +264,13 @@ class App extends React.Component {
       pointerY = Y;
     });
 
-    canvas.addEventListener('touchend', e => {
+    this.canvas.addEventListener('touchend', e => {
       if(e.changedTouches[0].touchType !== undefined) {
         if(e.changedTouches[0].touchType === 'direct') {
-          canvas.removeEventListener('touchmove', stopScroll);
+          this.canvas.removeEventListener('touchmove', stopScroll);
           return;
         } else if(e.changedTouches[0].touchType === 'stylus') {
-          canvas.addEventListener('touchmove', stopScroll, { passive: false });
+          this.canvas.addEventListener('touchmove', stopScroll, { passive: false });
         }
       } 
 
@@ -288,7 +292,7 @@ class App extends React.Component {
       draw(pointerX, pointerY, X, Y, thickness * thicknessCoefficient);
     });
 
-    let ctx = canvas.getContext('2d');
+    let ctx = this.canvas.getContext('2d');
     ctx.beginPath();
     ctx.fillStyle = "#f5f5f5";
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
@@ -353,7 +357,7 @@ class App extends React.Component {
           <button className="tool-button pen-btn" id="pen-btn">ペン</button>
           <button className="tool-button eraser-btn" id="eraser-btn">消しゴム</button>
           <button className="tool-button all-erase-btn" id="all-erase-btn" disabled>全消し</button>
-          <button id="download-button">ダウンロード</button>
+          <button onClick={this.download}>ダウンロード</button>
           <div className="color-picker"></div>
         
           <div>
@@ -373,7 +377,6 @@ class App extends React.Component {
         
         <div id="canvas-wrapper" className="canvas-wrapper">
           <canvas id="canvas" width="2000" height="2000"></canvas>
-          <canvas id="pen" width="2000" height="2000"></canvas>
         </div>
       </div>
     );
