@@ -6,26 +6,36 @@ import Pickr from '@simonwep/pickr/dist/pickr.es5.min';
 import '@simonwep/pickr/dist/themes/nano.min.css';
 
 class App extends React.Component {
-  canvas;
+  canvasWidth = 2000;
+  canvasHeight = 2000;
+
+  socket = io.connect('https://mucho613.space:8080');
 
   constructor() {
     super();
-    
-    this.download = this.download.bind(this);
-  }
 
-  download() {
-    const downloadLink = document.getElementById('download-link');
+    this.state = {
+      splashWindowIsVisible: true,
+      leftyUi: false,
 
-    downloadLink.href = this.canvas.toDataURL('image/png');
-    downloadLink.download = "monoiro.png";
-    downloadLink.click();
+      selectedTool: 1,
+      penColor: "#555555",
+      drawColor: "#555555",
+      defaultAlpha: 1.0,
+
+      penThicknessCoefficient: 16,
+      eraserThicknessCoefficient: 64,
+      thicknessCoefficient: 16
+    }
+
+    this.componentDidMount = this.componentDidMount.bind(this);
   }
 
   componentDidMount() {
     //HTML上の canvas タグを取得
     this.canvas = document.getElementById('canvas');
-
+    this.canvasContext = this.canvas.getContext('2d');
+    
     // 強制リロードさせてキャッシュクリア
     window.onpageshow = e => e.persisted ? window.location.reload() : null;
 
@@ -51,114 +61,41 @@ class App extends React.Component {
       ],
 
       components: {
-          // Main components
-          preview: true,
-          opacity: true,
-          hue: true,
+        // Main components
+        preview: true,
+        opacity: true,
+        hue: true,
 
-          // Input / output Options
-          interaction: {
-            hex: true,
-            rgba: true,
-            hsla: true,
-            hsva: false,
-            cmyk: false,
-            input: true,
-            clear: false,
-            save: true
-          }
+        // Input / output Options
+        interaction: {
+          hex: true,
+          rgba: true,
+          hsla: true,
+          hsva: false,
+          cmyk: false,
+          input: true,
+          clear: false,
+          save: true
         }
+      }
     });
-
-    let penBtn = document.getElementById('pen-btn');
-    let eraserBtn = document.getElementById('eraser-btn');
-    let allEraseBtn = document.getElementById('all-erase-btn');
-
-    let canvasWrapper = document.getElementById('canvas-wrapper');
-
-    let splash = document.getElementById('splash');
-    // let debugInfo = document.getElementById('debug-info');
-    let splashClose = document.getElementById('splash-close');
-    splashClose.addEventListener('click', () => {
-      splash.parentNode.removeChild(splash);
-    });
-
-    let leftySwitch = document.getElementById('lefty-switch');
-    let ui = document.getElementById('ui');
-
-    let socket = io.connect('https://mucho613.space:8080');
 
     let initImage = '';
 
-    penBtn.classList.add("active");
-
-
-    let penColor = "#555555"; // デフォルト
-    let drawColor = penColor;
-    let defaultAlpha = 1.0;
-
-    let penThicknessCoefficient = 8;
-    let eraserThicknessCoefficient = 64;
-    let thicknessCoefficient = penThicknessCoefficient;
-
-    let canvasWidth = 2000;
-    let canvasHeight = 2000;
-
-    let penThicknessSlider = document.getElementById('pen-thickness');
-    let eraserThicknessSlider = document.getElementById('eraser-thickness');
-
-    leftySwitch.addEventListener('change', e => {
-      if(e.target.checked) ui.classList.add("lefty");
-      else ui.classList.remove("lefty");
-    });
-    
-    penThicknessSlider.addEventListener('change', e => {
-      penThicknessCoefficient = e.target.value;
-      thicknessCoefficient = penThicknessCoefficient;
-    });
-
-    eraserThicknessSlider.addEventListener('change', e => {
-      eraserThicknessCoefficient = e.target.value;
-      thicknessCoefficient = eraserThicknessCoefficient;
-    });
-
     pickr.on('init', instance => {
     }).on('change', color => {
-      penColor = color.toHEXA().toString();
-      drawColor = penColor;
+      this.setState({
+        penColor: color.toHEXA().toString(),
+        drawColor: color.toHEXA().toString()
+      });
     }).on('swatchselect', color => {
-      penColor = color.toHEXA().toString();
-      drawColor = penColor;
+      this.setState({
+        penColor: color.toHEXA().toString(),
+        drawColor: color.toHEXA().toString()
+      });
     });
 
-    let stopScroll = e => {
-      e.preventDefault();
-    }
-
-    let thicknessCoefficientUpdate = value => {
-      thicknessCoefficient = value;
-    }
-
-    penBtn.addEventListener('click', e => {
-      drawColor = penColor;
-      penBtn.classList.add("active");
-      eraserBtn.classList.remove("active");
-
-      thicknessCoefficientUpdate(penThicknessCoefficient);
-    });
-
-    eraserBtn.addEventListener('click', e => {
-      drawColor = "#f5f5f5";
-      penBtn.classList.remove("active");
-      eraserBtn.classList.add("active");
-
-      thicknessCoefficientUpdate(eraserThicknessCoefficient);
-    });
-
-    allEraseBtn.addEventListener('click', e => {
-      allClear();
-      socket.emit('clear send');
-    });
+    let stopScroll = e => e.preventDefault();
 
     let penGrounded = false;
     let scrolled = false;
@@ -174,16 +111,15 @@ class App extends React.Component {
       rectY = rect.top;
       scrolled = false;
     }
+    
+    let prevForce = 0;
+    let firstTouch = true;
 
-    window.addEventListener('scroll', e => {
-      scrolled = true;
-    });
+    this.canvasContext.beginPath();
+    this.canvasContext.fillStyle = "#f5f5f5";
+    this.canvasContext.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
 
-    canvasWrapper.addEventListener('scroll', e => {
-      scrolled = true;
-    });
-
-    this.canvas.addEventListener('touchmove', stopScroll, { passive: false });
+    window.addEventListener('scroll', e => scrolled = true);
 
     this.canvas.addEventListener('mousedown', e => {
       if(!rectX || scrolled) firstDraw(e);
@@ -199,7 +135,7 @@ class App extends React.Component {
       let Y = ~~(e.clientY - rectY);
 
       if(penGrounded) {
-        draw(pointerX, pointerY, X, Y, 0.1 * thicknessCoefficient);
+        this.draw(pointerX, pointerY, X, Y, 0.1 * this.state.thicknessCoefficient, this.state.drawColor);
       }
 
       pointerX = X;
@@ -212,7 +148,7 @@ class App extends React.Component {
       let X = ~~(e.clientX - rectX);
       let Y = ~~(e.clientY - rectY);
 
-      draw(pointerX, pointerY, X, Y, 0.1 * thicknessCoefficient);
+      this.draw(pointerX, pointerY, X, Y, 0.1 * this.state.thicknessCoefficient, this.state.drawColor);
     });
 
     this.canvas.addEventListener('touchstart', e => {
@@ -226,8 +162,7 @@ class App extends React.Component {
       pointerY = ~~(e.changedTouches[0].clientY - rectY);
     });
 
-    let prevForce = 0;
-    let firstTouch = true;
+    this.canvas.addEventListener('touchmove', stopScroll, { passive: false });
 
     this.canvas.addEventListener('touchmove', e => {
       if(e.changedTouches[0].touchType === 'direct') {
@@ -258,7 +193,7 @@ class App extends React.Component {
         }
       }
       
-      draw(pointerX, pointerY, X, Y, thickness * thicknessCoefficient);
+      this.draw(pointerX, pointerY, X, Y, thickness * this.state.thicknessCoefficient, this.state.drawColor);
 
       pointerX = X;
       pointerY = Y;
@@ -289,93 +224,130 @@ class App extends React.Component {
         prevForce = currentForce;
       }
 
-      draw(pointerX, pointerY, X, Y, thickness * thicknessCoefficient);
+      this.draw(pointerX, pointerY, X, Y, thickness * this.state.thicknessCoefficient, this.state.drawColor);
     });
 
-    let ctx = this.canvas.getContext('2d');
-    ctx.beginPath();
-    ctx.fillStyle = "#f5f5f5";
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-    socket.on('init', base64 => {
+    this.socket.on('init', base64 => {
       initImage = base64.imageData;
 
-      let img = new Image();
+      const img = new Image();
       img.src = initImage;
-      setTimeout(() => { ctx.drawImage(img, 0, 0); }, 500);
+      setTimeout(() => { this.canvasContext.drawImage(img, 0, 0) }, 500);
     });
 
-    socket.on('send user', msg => {
+    this.socket.on('send user', msg => {
       // これを消すとタピオカ現象が発生する！なぜ？？？？？？？？？？？？？？？
       if(msg.thickness !== 0) {
-        drawCore(msg.x1, msg.y1, msg.x2, msg.y2, msg.color, msg.thickness);
+        this.drawCore(msg.x1, msg.y1, msg.x2, msg.y2, msg.color, msg.thickness);
       }
     });
 
-    socket.on('clear user', () => {
-      allClear();
-    });
+    this.socket.on('clear user', this.allClear);
+  }
 
-    function draw(x1, y1, x2, y2, thickness) {
-      if(thickness !== 0) {
-        socket.emit('server send', { x1: x1, y1: y1, x2: x2, y2: y2, color: drawColor, thickness: thickness});
-        drawCore(x1, y1, x2, y2, drawColor, thickness);
-      }
-    };
+  allClearEmit = () => {
+    this.allClear();
+    this.socket.emit('clear send');
+  }
 
-    function drawCore(x1, y1, x2, y2, color, thickness) {
-      ctx.beginPath();
-      ctx.globalAlpha = defaultAlpha;
-
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.lineCap = "round";
-      ctx.lineWidth = thickness;
-      ctx.strokeStyle = color;
-
-      ctx.stroke();
-    };
-
-    function allClear() {
-      ctx.beginPath();
-      ctx.fillStyle = "#f5f5f5";
-      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+  draw = (x1, y1, x2, y2, thickness, drawColor) => {
+    if(thickness !== 0) {
+      this.socket.emit('server send', { x1: x1, y1: y1, x2: x2, y2: y2, color: drawColor, thickness: thickness});
+      this.drawCore(x1, y1, x2, y2, drawColor, thickness);
     }
+  };
+
+  drawCore = (x1, y1, x2, y2, color, thickness) => {
+    this.canvasContext.beginPath();
+    this.canvasContext.globalAlpha = this.state.defaultAlpha;
+
+    this.canvasContext.moveTo(x1, y1);
+    this.canvasContext.lineTo(x2, y2);
+    this.canvasContext.lineCap = "round";
+    this.canvasContext.lineWidth = thickness;
+    this.canvasContext.strokeStyle = color;
+
+    this.canvasContext.stroke();
+  };
+
+  allClear = () => {
+    this.canvasContext.beginPath();
+    this.canvasContext.fillStyle = "#f5f5f5";
+    this.canvasContext.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
+  }
+
+  download = () => {
+    const downloadLink = document.getElementById('download-link');
+
+    downloadLink.href = this.canvas.toDataURL('image/png');
+    downloadLink.download = "monoiro.png";
+    downloadLink.click();
+  }
+
+  penSelected = (e) => {
+    this.setState(state => ({
+      drawColor: state.penColor,
+      selectedTool: 1,
+      thicknessCoefficient: state.penThicknessCoefficient
+    }));
+  }
+
+  eraserSelected = (e) => {
+    console.log(this.canvasContext);
+    this.setState(state => ({
+      drawColor: "#f5f5f5",
+      selectedTool: 2,
+      thicknessCoefficient: state.eraserThicknessCoefficient
+    }));
+  }
+
+  penThicknessChanged = (e) => {
+    this.setState({
+      penThicknessCoefficient: Number(e.target.value),
+      thicknessCoefficient: Number(e.target.value)
+    });
+  }
+
+  eraserThicknessChanged = (e) => {
+    this.setState({
+      eraserThicknessCoefficient: Number(e.target.value),
+      thicknessCoefficient: Number(e.target.value)
+    });
   }
 
   render() {
     return (
       <div className="App">
-        <div className="splash" id="splash">
+        <div className={this.state.splashWindowIsVisible ? 'splash' : 'splash hide'}>
           <h1>MONOIRO Board</h1>
           <p className="japanese">モノイロボード 略してモノボ</p>
-          <button id="splash-close">閉じる</button>
+          <button onClick={e => this.setState({splashWindowIsVisible: false})}>閉じる</button>
         </div>
         
-        <div id="ui" className="overlay">
+        <div id="ui" className={this.state.leftyUi ? 'overlay lefty' : 'overlay'}>
           <a id="download-link"></a>
-          <button className="tool-button pen-btn" id="pen-btn">ペン</button>
-          <button className="tool-button eraser-btn" id="eraser-btn">消しゴム</button>
-          <button className="tool-button all-erase-btn" id="all-erase-btn" disabled>全消し</button>
+          <button onClick={this.penSelected} className={(this.state.selectedTool === 1 ? 'pen-btn active' : 'pen-btn')}>ペン</button>
+          <button onClick={this.eraserSelected} className={(this.state.selectedTool === 2 ? 'eraser-btn active' : 'eraser-btn')}>消しゴム</button>
+          <button onClick={this.allClearEmit} className="all-erase-btn" disabled>全消し</button>
           <button onClick={this.download}>ダウンロード</button>
           <div className="color-picker"></div>
         
           <div>
-            <div>ペンの太さ: <span id="pen-thickness-indicator"></span></div>
-            <input id="pen-thickness" defaultValue="16" type="range" min="16" max="256"></input>
+            <div>ペンの太さ: {this.state.penThicknessCoefficient}</div>
+            <input onChange={this.penThicknessChanged} defaultValue={this.state.penThicknessCoefficient} type="range" min="16" max="256"></input>
           </div>
           
           <div>
-            <div>消しゴムの太さ: <span id="eraser-thickness-indicator"></span></div>
-            <input id="eraser-thickness" defaultValue="64" type="range" min="32" max="512"></input>
+            <div>消しゴムの太さ: {this.state.eraserThicknessCoefficient}</div>
+            <input onChange={this.eraserThicknessChanged} defaultValue={this.state.eraserThicknessCoefficient} type="range" min="32" max="512"></input>
           </div>
           
           <div>
-            <input id="lefty-switch" type="checkbox" defaultValue="1"></input>左利き
+            <input onChange={e => this.setState({leftyUi: e.target.checked})} type="checkbox"></input>左利き
           </div>
         </div>
         
-        <div id="canvas-wrapper" className="canvas-wrapper">
+        <div onScroll={e => this.setState({scrolled: true})} className="canvas-wrapper">
           <canvas id="canvas" width="2000" height="2000"></canvas>
         </div>
       </div>

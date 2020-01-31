@@ -25,6 +25,10 @@ h1 {
   right: 0;
 }
 
+.splash.hide {
+  display: none;
+}
+
 .canvas-wrapper {
   width: 100%;
   height: 100vh;
@@ -87,7 +91,7 @@ dd {
   appearance: none;
 }
 
-.tool-button.active {
+.overlay button.active {
   background-color: rgb(255, 219, 118);
 }
 
