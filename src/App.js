@@ -17,10 +17,6 @@ class App extends React.Component {
   previousForce = 0;
   initialTouch = true;
 
-  stopScroll(e) {
-    e.preventDefault();
-  }
-
   socket = io.connect('https://mucho613.space:8080');
 
   constructor() {
@@ -76,6 +72,8 @@ class App extends React.Component {
     this.rectY = rect.top;
     this.scrolled = false;
   }
+
+  stopScroll = e => e.preventDefault();
 
   handleToolChange = tool => this.setState({selectedTool: tool});
   handlePenColorChange = color => this.setState({penColor: color});
@@ -227,7 +225,7 @@ class App extends React.Component {
           onDownload={this.handleDownload}
         />
         
-        <div onScroll={e => this.scrolled = true} className="canvas-wrapper">
+        <div onScroll={() => this.scrolled = true} className="canvas-wrapper">
           <canvas
             onMouseDown={this.handleMouseDown}
             onMouseMove={this.handleMouseMove}
