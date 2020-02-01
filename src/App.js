@@ -8,10 +8,37 @@ class App extends React.Component {
   canvasWidth = 2000;
   canvasHeight = 2000;
 
+  // Canvas 関連のやつ
+  penGrounded = false;
+  scrolled = false;
+  previousPositionX; previousPositionY;
+  rectX = null;
+  rectY;
+  previousForce = 0;
+  initialTouch = true;
+
+  stopScroll(e) {
+    e.preventDefault();
+  }
+
   socket = io.connect('https://mucho613.space:8080');
 
   constructor() {
     super();
+    
+    this.socket.on('init', base64 => {
+      let initImage = base64.imageData;
+      const img = new Image();
+      img.src = initImage;
+      setTimeout(() => this.canvasContext.drawImage(img, 0, 0), 500);
+    });
+
+    this.socket.on('send user', msg => {
+      // これを消すとタピオカ
+      if(msg.thickness !== 0) {
+        this.draw(msg.x1, msg.y1, msg.x2, msg.y2, msg.color, msg.thickness);
+      }
+    });
 
     this.state = {
       splashWindowIsVisible: true,
@@ -23,7 +50,9 @@ class App extends React.Component {
       defaultAlpha: 1.0,
 
       penThicknessCoefficient: 16,
-      eraserThicknessCoefficient: 64
+      eraserThicknessCoefficient: 64,
+
+      debugText: ''
     }
   }
 
@@ -32,186 +61,20 @@ class App extends React.Component {
     this.canvasContext = this.canvas.getContext('2d');
 
     this.downloadLink = document.getElementById('download-link');
-    
-    window.onpageshow = e => e.persisted && window.location.reload();
 
-    let stopScroll = e => e.preventDefault();
+    this.allClear();
 
-    let penGrounded = false;
-    let scrolled = false;
+    window.addEventListener('pageshow', e => e.persisted && window.location.reload());
+    window.addEventListener('scroll', () => this.scrolled = true);
 
-    let pointerX;
-    let pointerY;
+    this.canvas.addEventListener('touchmove', this.stopScroll, { passive: false });
+  }
 
-    let rectX = null, rectY;
-
-    let firstDraw = e => {
-      let rect = e.target.getBoundingClientRect();
-      rectX = rect.left;
-      rectY = rect.top;
-      scrolled = false;
-    }
-    
-    let prevForce = 0;
-    let firstTouch = true;
-
-    this.canvasContext.beginPath();
-    this.canvasContext.fillStyle = "#f5f5f5";
-    this.canvasContext.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
-
-    window.addEventListener('scroll', e => scrolled = true);
-
-    this.canvas.addEventListener('mousedown', e => {
-      if(!rectX || scrolled) firstDraw(e);
-
-      penGrounded = true;
-
-      pointerX = ~~(e.clientX - rectX);
-      pointerY = ~~(e.clientY - rectY);
-    });
-
-    this.canvas.addEventListener('mousemove', e => {
-      let X = ~~(e.clientX - rectX);
-      let Y = ~~(e.clientY - rectY);
-
-      let thicknessCoefficient = this.state.selectedTool === 1
-        ? this.state.penThicknessCoefficient
-        : this.state.eraserThicknessCoefficient;
-
-      let drawColor = this.state.selectedTool === 1
-        ? this.state.penColor
-        : this.state.eraserColor;
-
-      if(penGrounded) {
-        this.draw(pointerX, pointerY, X, Y, 0.1 * thicknessCoefficient, drawColor);
-      }
-
-      pointerX = X;
-      pointerY = Y;
-    });
-
-    this.canvas.addEventListener('mouseup', e => {
-      penGrounded = false;
-
-      let X = ~~(e.clientX - rectX);
-      let Y = ~~(e.clientY - rectY);
-
-      let thicknessCoefficient = this.state.selectedTool === 1
-        ? this.state.penThicknessCoefficient
-        : this.state.eraserThicknessCoefficient;
-
-      let drawColor = this.state.selectedTool === 1
-        ? this.state.penColor
-        : this.state.eraserColor;
-
-      this.draw(pointerX, pointerY, X, Y, 0.1 * thicknessCoefficient, drawColor);
-    });
-
-    this.canvas.addEventListener('touchstart', e => {
-      if(e.touches[0].touchType === 'direct') {
-        this.canvas.removeEventListener('touchmove', stopScroll);
-        return;
-      }
-      if(!rectX || scrolled) firstDraw(e);
-
-      pointerX = ~~(e.changedTouches[0].clientX - rectX);
-      pointerY = ~~(e.changedTouches[0].clientY - rectY);
-    });
-
-    this.canvas.addEventListener('touchmove', stopScroll, { passive: false });
-
-    this.canvas.addEventListener('touchmove', e => {
-      if(e.changedTouches[0].touchType === 'direct') {
-        this.canvas.removeEventListener('touchmove', stopScroll);
-        return;
-      } else if(e.changedTouches[0].touchType === 'stylus') {
-        this.canvas.addEventListener('touchmove', stopScroll, { passive: false });
-      }
-
-      let X = ~~(e.changedTouches[0].clientX - rectX);
-      let Y = ~~(e.changedTouches[0].clientY - rectY);
-
-      let thickness;
-      if(firstTouch) {
-        thickness = 0;
-        prevForce = 0;
-        firstTouch = false;
-      }
-      else {
-        let currentForce = e.changedTouches[0].force;
-        if(currentForce - prevForce > 0.01) {
-          thickness = prevForce + 0.01;
-          prevForce = prevForce + 0.01;
-        }
-        else {
-          thickness = currentForce;
-          prevForce = currentForce;
-        }
-      }
-
-      let thicknessCoefficient = this.state.selectedTool === 1
-        ? this.state.penThicknessCoefficient
-        : this.state.eraserThicknessCoefficient;
-
-      let drawColor = this.state.selectedTool === 1
-        ? this.state.penColor
-        : this.state.eraserColor;
-      
-      this.draw(pointerX, pointerY, X, Y, thickness * thicknessCoefficient, drawColor);
-
-      pointerX = X;
-      pointerY = Y;
-    });
-
-    this.canvas.addEventListener('touchend', e => {
-      if(e.changedTouches[0].touchType !== undefined) {
-        if(e.changedTouches[0].touchType === 'direct') {
-          this.canvas.removeEventListener('touchmove', stopScroll);
-          return;
-        } else if(e.changedTouches[0].touchType === 'stylus') {
-          this.canvas.addEventListener('touchmove', stopScroll, { passive: false });
-        }
-      } 
-
-      firstTouch = true;
-      let thickness;
-      let X = ~~(e.changedTouches[0].clientX - rectX);
-      let Y = ~~(e.changedTouches[0].clientY - rectY);
-
-      let currentForce = e.changedTouches[0].force;
-      if(currentForce - prevForce > 0.01) {
-        thickness = prevForce + 0.01;
-        prevForce = prevForce + 0.01;
-      }
-      else {
-        thickness = currentForce;
-        prevForce = currentForce;
-      }
-
-      let thicknessCoefficient = this.state.selectedTool === 1
-        ? this.state.penThicknessCoefficient
-        : this.state.eraserThicknessCoefficient;
-
-      let drawColor = this.state.selectedTool === 1
-        ? this.state.penColor
-        : this.state.eraserColor;
-
-      this.draw(pointerX, pointerY, X, Y, thickness * thicknessCoefficient, drawColor);
-    });
-
-    this.socket.on('init', base64 => {
-      let initImage = base64.imageData;
-      const img = new Image();
-      img.src = initImage;
-      setTimeout(() => this.canvasContext.drawImage(img, 0, 0), 500);
-    });
-
-    this.socket.on('send user', msg => {
-      // これを消すとタピオカ現象が発生する！なぜ？？？？？？？？？？？？？？？
-      if(msg.thickness !== 0) {
-        this.drawCore(msg.x1, msg.y1, msg.x2, msg.y2, msg.color, msg.thickness);
-      }
-    });
+  recalculatePositionInCanvasCoodinate = e => {
+    let rect = e.target.getBoundingClientRect();
+    this.rectX = rect.left;
+    this.rectY = rect.top;
+    this.scrolled = false;
   }
 
   handleToolChange = tool => this.setState({selectedTool: tool});
@@ -224,15 +87,109 @@ class App extends React.Component {
     this.downloadLink.download = "monoiro.png";
     this.downloadLink.click();
   }
+  
+  handleMouseDown = e => {
+    if(!this.rectX || this.scrolled) this.recalculatePositionInCanvasCoodinate(e);
 
-  draw = (x1, y1, x2, y2, thickness, drawColor) => {
+    this.previousPositionX = ~~(e.clientX - this.rectX);
+    this.previousPositionY = ~~(e.clientY - this.rectY);
+    
+    // ペンを接地状態にする
+    this.penGrounded = true;
+  }
+
+  handleMouseMove = e => {
+    if(this.penGrounded) {
+      let X = ~~(e.clientX - this.rectX);
+      let Y = ~~(e.clientY - this.rectY);
+
+      this.penStroke(this.previousPositionX, this.previousPositionY, X, Y, 0.5);
+
+      this.previousPositionX = X;
+      this.previousPositionY = Y;
+    }
+  }
+
+  handleMouseUp = e => {
+    let X = ~~(e.clientX - this.rectX);
+    let Y = ~~(e.clientY - this.rectY);
+
+    this.penStroke(this.previousPositionX, this.previousPositionY, X, Y, 0.5);
+
+    // ペンの接地状態を解除
+    this.penGrounded = false;
+  }
+
+  handleTouchStart = e => {
+    const touch = e.changedTouches[0];
+
+    if(touch.touchType === 'direct') {
+      this.canvas.removeEventListener('touchmove', this.stopScroll, { passive: false });
+    }
+
+    if(!this.rectX || this.scrolled) this.recalculatePositionInCanvasCoodinate(e);
+
+    this.previousPositionX = ~~(touch.clientX - this.rectX);
+    this.previousPositionY = ~~(touch.clientY - this.rectY);
+  }
+
+  handleTouchMove = e => {
+    const touch = e.changedTouches[0];
+
+    let X = ~~(touch.clientX - this.rectX);
+    let Y = ~~(touch.clientY - this.rectY);
+
+    let thickness;
+    let currentForce = touch.force;
+
+    if(this.initialTouch) {
+      thickness = 0;
+      this.previousForce = currentForce;
+      this.initialTouch = false;
+    }
+    else {
+      thickness = (currentForce + this.previousForce) / 2;
+    }
+
+    this.penStroke(this.previousPositionX, this.previousPositionY, X, Y, thickness);
+
+    this.previousPositionX = X;
+    this.previousPositionY = Y;
+  }
+
+  handleTouchEnd = e => {
+    const touch = e.changedTouches[0];
+
+    if(touch.touchType === 'direct') {
+      this.canvas.addEventListener('touchmove', this.stopScroll, { passive: false });
+    }
+
+    this.initialTouch = true;
+
+    let X = ~~(touch.clientX - this.rectX);
+    let Y = ~~(touch.clientY - this.rectY);
+
+    let currentForce = touch.force;
+
+    this.penStroke(this.previousPositionX, this.previousPositionY, X, Y, currentForce);
+  }
+
+  penStroke = (x1, y1, x2, y2, force) => {
+    let thickness = this.state.selectedTool === 1
+      ? this.state.penThicknessCoefficient * force
+      : this.state.eraserThicknessCoefficient * force;
+
+    let drawColor = this.state.selectedTool === 1
+      ? this.state.penColor
+      : this.state.eraserColor;
+
     if(thickness !== 0) {
       this.socket.emit('server send', { x1: x1, y1: y1, x2: x2, y2: y2, color: drawColor, thickness: thickness});
-      this.drawCore(x1, y1, x2, y2, drawColor, thickness);
+      this.draw(x1, y1, x2, y2, drawColor, thickness);
     }
   };
 
-  drawCore = (x1, y1, x2, y2, color, thickness) => {
+  draw = (x1, y1, x2, y2, color, thickness) => {
     this.canvasContext.beginPath();
     this.canvasContext.globalAlpha = this.state.defaultAlpha;
 
@@ -256,7 +213,7 @@ class App extends React.Component {
       <div className="App">
         <div className={this.state.splashWindowIsVisible ? 'splash' : 'splash hide'}>
           <h1>MONOIRO Board</h1>
-          <p className="japanese">モノイロボード 略してモノボ</p>
+          <p className="japanese">{this.state.debugText}</p>
           <button onClick={e => this.setState({splashWindowIsVisible: false})}>閉じる</button>
         </div>
         
@@ -270,8 +227,15 @@ class App extends React.Component {
           onDownload={this.handleDownload}
         />
         
-        <div onScroll={e => this.setState({scrolled: true})} className="canvas-wrapper">
-          <canvas id="canvas" width="2000" height="2000"></canvas>
+        <div onScroll={e => this.scrolled = true} className="canvas-wrapper">
+          <canvas
+            onMouseDown={this.handleMouseDown}
+            onMouseMove={this.handleMouseMove}
+            onMouseUp={this.handleMouseUp}
+            onTouchStart={this.handleTouchStart}
+            onTouchMove={this.handleTouchMove}
+            onTouchEnd={this.handleTouchEnd}
+            id="canvas" width={this.canvasWidth} height={this.canvasHeight}></canvas>
         </div>
       </div>
     );

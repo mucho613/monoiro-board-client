@@ -1,3 +1,7 @@
+#root, .App {
+  overflow: hidden;
+}
+
 body {
   font-family: 'Noto Sans JP', sans-serif;
   margin: 0;
@@ -34,13 +38,6 @@ h1 {
   height: 100vh;
   overflow: scroll;
   position: relative;
-}
-
-#pen {
-  position: absolute;
-  left: 0;
-  top: 0;
-  pointer-events: none;
 }
 
 .japanese {

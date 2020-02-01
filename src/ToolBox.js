@@ -62,12 +62,12 @@ class Toolbox extends React.Component {
       
         <div>
           <div>ペンの太さ: {penThicknessCoefficient}</div>
-          <input onChange={e => this.handlePenThicknessChange(parseInt(e.target.value))} defaultValue={penThicknessCoefficient} type="range" min="16" max="256"></input>
+          <input onChange={e => this.handlePenThicknessChange(parseInt(e.target.value))} defaultValue={penThicknessCoefficient} type="range" min="8" max="256"></input>
         </div>
         
         <div>
           <div>消しゴムの太さ: {eraserThicknessCoefficient}</div>
-          <input onChange={e => this.handleEraserThicknessChange(parseInt(e.target.value))} defaultValue={eraserThicknessCoefficient} type="range" min="32" max="512"></input>
+          <input onChange={e => this.handleEraserThicknessChange(parseInt(e.target.value))} defaultValue={eraserThicknessCoefficient} type="range" min="8" max="256"></input>
         </div>
         
         <div>
