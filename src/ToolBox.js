@@ -29,21 +29,18 @@ class Toolbox extends React.Component {
         hue: true,
 
         interaction: {
-          hex: true,
           rgba: true,
           hsla: true,
-          hsva: false,
           cmyk: false,
-          input: true,
-          clear: false,
-          save: true
+          input: true
         }
       }
     });
 
-    pickr.on('init', instance => {})
-      .on('change', color => this.handlePenColorChange(color.toHEXA().toString()))
-      .on('swatchselect', color => this.handlePenColorChange(color.toHEXA().toString()));
+    pickr.on('change', (color, instance) => {
+      this.handlePenColorChange(color.toHEXA().toString());
+      instance.applyColor();
+    });
   }
 
   render() {
@@ -54,7 +51,6 @@ class Toolbox extends React.Component {
 
     return (
       <div id="ui" className={leftyUi ? 'overlay lefty' : 'overlay'}>
-        <a id="download-link"></a>
         <button onClick={() => this.handleToolChange(1)} className={(selectedTool === 1 ? 'pen-btn active' : 'pen-btn')}>ペン</button>
         <button onClick={() => this.handleToolChange(2)} className={(selectedTool === 2 ? 'eraser-btn active' : 'eraser-btn')}>消しゴム</button>
         <button onClick={this.handleDownload}>ダウンロード</button>

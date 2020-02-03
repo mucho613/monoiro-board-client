@@ -13,12 +13,7 @@ class Canvas extends React.Component {
   rectY;
   previousForce = 0;
   initialTouch = true;
-
-  constructor(props) {
-    super(props);
-
-    this.state = {};
-  }
+  initialImageRendered = false;
 
   componentDidMount() {
     this.canvas = document.getElementById('canvas');
@@ -62,17 +57,20 @@ class Canvas extends React.Component {
     let X = ~~(e.clientX - this.rectX);
     let Y = ~~(e.clientY - this.rectY);
 
-    this.penStroke(this.previousPositionX, this.previousPositionY, X, Y, 0.5);
-
     // ペンの接地状態を解除
     this.penGrounded = false;
+
+    if(X !== this.previousPositionX && Y !== this.previousPositionY) {
+      this.penStroke(this.previousPositionX, this.previousPositionY, X, Y, 0.5);
+      return;
+    }
   }
 
   handleTouchStart = e => {
     const touch = e.changedTouches[0];
 
     if(touch.touchType === 'direct') {
-      this.canvas.removeEventListener('touchmove', this.stopScroll, { passive: false });
+      this.canvas.removeEventListener('touchmove', this.stopScroll);
       return;
     }
 
@@ -84,6 +82,13 @@ class Canvas extends React.Component {
 
   handleTouchMove = e => {
     const touch = e.changedTouches[0];
+
+    if(touch.touchType === 'direct') {
+      this.canvas.removeEventListener('touchmove', this.stopScroll);
+      return;
+    } else if(touch.touchType === 'stylus') {
+      this.canvas.addEventListener('touchmove', this.stopScroll, { passive: false });
+    }
 
     let X = ~~(touch.clientX - this.rectX);
     let Y = ~~(touch.clientY - this.rectY);
@@ -110,10 +115,7 @@ class Canvas extends React.Component {
     const touch = e.changedTouches[0];
 
     this.canvas.addEventListener('touchmove', this.stopScroll, { passive: false });
-
-    if(touch.touchType === 'direct') {
-      return;
-    }
+    if(touch.touchType === 'direct') return;
 
     this.initialTouch = true;
 
@@ -126,13 +128,13 @@ class Canvas extends React.Component {
   }
 
   penStroke = (x1, y1, x2, y2, force) => {
-    let thickness = this.state.selectedTool === 1
-      ? this.state.penThicknessCoefficient * force
-      : this.state.eraserThicknessCoefficient * force;
+    let thickness = this.props.selectedTool === 1
+      ? this.props.penThicknessCoefficient * force
+      : this.props.eraserThicknessCoefficient * force;
 
-    let drawColor = this.state.selectedTool === 1
-      ? this.state.penColor
-      : this.state.eraserColor;
+    let drawColor = this.props.selectedTool === 1
+      ? this.props.penColor
+      : this.props.eraserColor;
 
     if(thickness !== 0) {
       this.props.onDraw({ x1: x1, y1: y1, x2: x2, y2: y2, color: drawColor, thickness: thickness});
@@ -142,7 +144,7 @@ class Canvas extends React.Component {
 
   draw = (x1, y1, x2, y2, color, thickness) => {
     this.canvasContext.beginPath();
-    this.canvasContext.globalAlpha = this.state.defaultAlpha;
+    this.canvasContext.globalAlpha = this.props.defaultAlpha;
 
     this.canvasContext.moveTo(x1, y1);
     this.canvasContext.lineTo(x2, y2);
@@ -159,9 +161,15 @@ class Canvas extends React.Component {
     this.canvasContext.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
   }
 
-  render() {
-    if(this.props.initialImage) this.canvasContext.drawImage(this.props.initialImage, 0, 0);
+  initialize = image => {
+    this.canvasContext.drawImage(image, 0, 0);
+  }
 
+  getCanvasImageBase64 = () => this.canvas.toDataURL();
+
+  shouldComponentUpdate = () => false;
+
+  render() {
     return (
       <div onScroll={() => this.scrolled = true} className="canvas-wrapper">
         <canvas

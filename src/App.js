@@ -6,8 +6,6 @@ import Toolbox from './ToolBox';
 import Canvas from './Canvas';
 
 class App extends React.Component {
-  socket = io.connect('https://mucho613.space:8080');
-
   constructor() {
     super();
 
@@ -22,9 +20,19 @@ class App extends React.Component {
 
       penThicknessCoefficient: 16,
       eraserThicknessCoefficient: 64,
-
-      initialImage: null
     }
+
+    this.socket = io.connect('https://mucho613.space:8080');
+
+    this.socket.on('init', base64 => {
+      const image = new Image();
+      image.src = base64.imageData;
+      setTimeout(() => this.refs.canvas.initialize(image), 0);
+    });
+
+    this.socket.on('send user', msg => {
+      this.refs.canvas.draw(msg.x1, msg.y1, msg.x2, msg.y2, msg.color, msg.thickness);
+    });
   }
 
   componentDidMount() {
@@ -32,21 +40,6 @@ class App extends React.Component {
 
     window.addEventListener('pageshow', e => e.persisted && window.location.reload());
     window.addEventListener('scroll', () => this.scrolled = true);
- 
-    this.socket.on('init', base64 => {
-      let initImage = base64.imageData;
-      const img = new Image();
-      img.src = initImage;
-
-      this.setState({initialImage: img});
-    });
-
-    this.socket.on('send user', msg => {
-      // これを消すとタピオカ
-      if(msg.thickness !== 0) {
-        this.refs.canvas.draw(msg.x1, msg.y1, msg.x2, msg.y2, msg.color, msg.thickness);
-      }
-    });
   }
 
   handleDraw = attribute => this.socket.emit('server send', attribute);
@@ -57,9 +50,9 @@ class App extends React.Component {
   handleEraserThicknessChange = thickness => this.setState({eraserThicknessCoefficient: thickness});
   handleLeftyChange = isLefty => this.setState({leftyUi: isLefty});
   handleDownload = () => {
-    this.downloadLink.href = this.canvas.toDataURL('image/png');
-    this.downloadLink.download = "monoiro.png";
-    this.downloadLink.click();
+    const base64 = this.refs.canvas.getCanvasImageBase64();
+    const newWindow = window.open();
+    newWindow.document.write('<img src="' + base64 + '" style="width:100%; height:100%; object-fit: contain;"></img>');
   }
 
   render() {
@@ -84,6 +77,12 @@ class App extends React.Component {
           initialImage={this.state.initialImage}
           onDraw={this.handleDraw}
           ref={'canvas'}
+          selectedTool={this.state.selectedTool}
+          penColor={this.state.penColor}
+          eraserColor={this.state.eraserColor}
+          defaultAlpha={this.state.defaultAlpha}
+          penThicknessCoefficient={this.state.penThicknessCoefficient}
+          eraserThicknessCoefficient={this.state.eraserThicknessCoefficient}
         />
       </div>
     );
