@@ -15,7 +15,6 @@ class App extends React.Component {
 
       selectedTool: 1,
       penColor: "#555555",
-      eraserColor: "#f5f5f5",
       defaultAlpha: 1.0,
 
       penThicknessCoefficient: 16,
@@ -31,7 +30,7 @@ class App extends React.Component {
     });
 
     this.socket.on('send user', msg => {
-      this.refs.canvas.draw(msg.x1, msg.y1, msg.x2, msg.y2, msg.color, msg.thickness);
+      this.refs.canvas.draw(msg.tool, msg.x1, msg.y1, msg.x2, msg.y2, msg.color, msg.thickness);
     });
   }
 
@@ -79,7 +78,6 @@ class App extends React.Component {
           ref={'canvas'}
           selectedTool={this.state.selectedTool}
           penColor={this.state.penColor}
-          eraserColor={this.state.eraserColor}
           defaultAlpha={this.state.defaultAlpha}
           penThicknessCoefficient={this.state.penThicknessCoefficient}
           eraserThicknessCoefficient={this.state.eraserThicknessCoefficient}

@@ -18,7 +18,6 @@ class Canvas extends React.Component {
   componentDidMount() {
     this.canvas = document.getElementById('canvas');
     this.canvasContext = this.canvas.getContext('2d');
-    this.allClear();
     this.canvas.addEventListener('touchmove', this.stopScroll, { passive: false });
   }
 
@@ -90,11 +89,11 @@ class Canvas extends React.Component {
       this.canvas.addEventListener('touchmove', this.stopScroll, { passive: false });
     }
 
-    let X = ~~(touch.clientX - this.rectX);
-    let Y = ~~(touch.clientY - this.rectY);
+    const X = ~~(touch.clientX - this.rectX);
+    const Y = ~~(touch.clientY - this.rectY);
 
     let thickness;
-    let currentForce = touch.force;
+    const currentForce = touch.force;
 
     if(this.initialTouch) {
       thickness = 0;
@@ -119,30 +118,26 @@ class Canvas extends React.Component {
 
     this.initialTouch = true;
 
-    let X = ~~(touch.clientX - this.rectX);
-    let Y = ~~(touch.clientY - this.rectY);
+    const X = ~~(touch.clientX - this.rectX);
+    const Y = ~~(touch.clientY - this.rectY);
 
-    let currentForce = touch.force;
+    const currentForce = touch.force;
 
     this.penStroke(this.previousPositionX, this.previousPositionY, X, Y, currentForce);
   }
 
   penStroke = (x1, y1, x2, y2, force) => {
-    let thickness = this.props.selectedTool === 1
+    const thickness = this.props.selectedTool === 1
       ? this.props.penThicknessCoefficient * force
       : this.props.eraserThicknessCoefficient * force;
 
-    let drawColor = this.props.selectedTool === 1
-      ? this.props.penColor
-      : this.props.eraserColor;
-
     if(thickness !== 0) {
-      this.props.onDraw({ x1: x1, y1: y1, x2: x2, y2: y2, color: drawColor, thickness: thickness});
-      this.draw(x1, y1, x2, y2, drawColor, thickness);
+      this.props.onDraw({ tool: this.props.selectedTool, x1: x1, y1: y1, x2: x2, y2: y2, color: this.props.penColor, thickness: thickness});
+      this.draw(this.props.selectedTool, x1, y1, x2, y2, this.props.penColor, thickness);
     }
   };
 
-  draw = (x1, y1, x2, y2, color, thickness) => {
+  draw = (tool, x1, y1, x2, y2, color, thickness) => {
     this.canvasContext.beginPath();
     this.canvasContext.globalAlpha = this.props.defaultAlpha;
 
@@ -151,15 +146,12 @@ class Canvas extends React.Component {
     this.canvasContext.lineCap = "round";
     this.canvasContext.lineWidth = thickness;
     this.canvasContext.strokeStyle = color;
+    this.canvasContext.globalCompositeOperation = this.props.selectedTool === 1
+      ? 'source-over'
+      : 'destination-out';
 
     this.canvasContext.stroke();
   };
-
-  allClear = () => {
-    this.canvasContext.beginPath();
-    this.canvasContext.fillStyle = "#f5f5f5";
-    this.canvasContext.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
-  }
 
   initialize = image => {
     this.canvasContext.drawImage(image, 0, 0);
@@ -171,16 +163,16 @@ class Canvas extends React.Component {
 
   render() {
     return (
-      <div onScroll={() => this.scrolled = true} className="canvas-wrapper">
-        <canvas
-          onMouseDown={this.handleMouseDown}
-          onMouseMove={this.handleMouseMove}
-          onMouseUp={this.handleMouseUp}
-          onTouchStart={this.handleTouchStart}
-          onTouchMove={this.handleTouchMove}
-          onTouchEnd={this.handleTouchEnd}
-          id="canvas" width={this.canvasWidth} height={this.canvasHeight}>
-        </canvas>
+      <div onScroll={() => this.scrolled = true}
+        onMouseDown={this.handleMouseDown}
+        onMouseMove={this.handleMouseMove}
+        onMouseUp={this.handleMouseUp}
+        onTouchStart={this.handleTouchStart}
+        onTouchMove={this.handleTouchMove}
+        onTouchEnd={this.handleTouchEnd}
+        className="canvas-wrapper">
+        {/* <canvas id="temp-layer" width={this.canvasWidth} height={this.canvasHeight}></canvas> */}
+        <canvas id="canvas" width={this.canvasWidth} height={this.canvasHeight}></canvas>
       </div>
     );
   }
