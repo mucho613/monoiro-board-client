@@ -30,7 +30,7 @@ class App extends React.Component {
     });
 
     this.socket.on('send user', msg => {
-      this.refs.canvas.draw(msg.tool, msg.x1, msg.y1, msg.x2, msg.y2, msg.color, msg.thickness);
+      this.refs.canvas.draw(msg);
     });
   }
 

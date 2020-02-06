@@ -133,20 +133,20 @@ class Canvas extends React.Component {
 
     if(thickness !== 0) {
       this.props.onDraw({ tool: this.props.selectedTool, x1: x1, y1: y1, x2: x2, y2: y2, color: this.props.penColor, thickness: thickness});
-      this.draw(this.props.selectedTool, x1, y1, x2, y2, this.props.penColor, thickness);
+      this.draw({ tool: this.props.selectedTool, x1: x1, y1: y1, x2: x2, y2: y2, color: this.props.penColor, thickness: thickness});
     }
   };
 
-  draw = (tool, x1, y1, x2, y2, color, thickness) => {
+  draw = msg => {
     this.canvasContext.beginPath();
     this.canvasContext.globalAlpha = this.props.defaultAlpha;
 
-    this.canvasContext.moveTo(x1, y1);
-    this.canvasContext.lineTo(x2, y2);
+    this.canvasContext.moveTo(msg.x1, msg.y1);
+    this.canvasContext.lineTo(msg.x2, msg.y2);
     this.canvasContext.lineCap = "round";
-    this.canvasContext.lineWidth = thickness;
-    this.canvasContext.strokeStyle = color;
-    this.canvasContext.globalCompositeOperation = this.props.selectedTool === 1
+    this.canvasContext.lineWidth = msg.thickness;
+    this.canvasContext.strokeStyle = msg.color;
+    this.canvasContext.globalCompositeOperation = msg.tool === 1
       ? 'source-over'
       : 'destination-out';
 
