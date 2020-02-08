@@ -1,5 +1,5 @@
 import React from 'react';
-import './App.css';
+import './Canvas.css';
 
 class Canvas extends React.Component {
   canvasWidth = 2000;
@@ -171,7 +171,7 @@ class Canvas extends React.Component {
         onTouchMove={this.handleTouchMove}
         onTouchEnd={this.handleTouchEnd}
         className="canvas-wrapper">
-        {/* <canvas id="temp-layer" width={this.canvasWidth} height={this.canvasHeight}></canvas> */}
+        <canvas id="temp-layer" width={this.canvasWidth} height={this.canvasHeight}></canvas>
         <canvas id="canvas" width={this.canvasWidth} height={this.canvasHeight}></canvas>
       </div>
     );

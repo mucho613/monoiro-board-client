@@ -3,6 +3,8 @@ import React from 'react';
 import Pickr from '@simonwep/pickr/dist/pickr.es5.min';
 import '@simonwep/pickr/dist/themes/nano.min.css';
 
+import './ToolBox.css';
+
 class Toolbox extends React.Component {
   handleToolChange = tool => this.props.onToolChange(tool);
   handlePenColorChange = color => this.props.onPenColorChange(color);

@@ -48,6 +48,7 @@ class App extends React.Component {
   handlePenThicknessChange = thickness => this.setState({penThicknessCoefficient: thickness});
   handleEraserThicknessChange = thickness => this.setState({eraserThicknessCoefficient: thickness});
   handleLeftyChange = isLefty => this.setState({leftyUi: isLefty});
+  handleUndo = () => this.refs.canvas.undo();
   handleDownload = () => {
     const base64 = this.refs.canvas.getCanvasImageBase64();
     const newWindow = window.open();
