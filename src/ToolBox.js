@@ -11,6 +11,7 @@ class Toolbox extends React.Component {
   handlePenThicknessChange = thickness => this.props.onPenThicknessChange(thickness);
   handleEraserThicknessChange = thickness => this.props.onEraserThicknessChange(thickness);
   handleLeftyChange = isLefty => this.props.onLeftyChange(isLefty);
+  handleUndo = () => this.props.onUndo();
   handleDownload = () => this.props.onDownload();
 
   componentDidMount() {
@@ -55,6 +56,7 @@ class Toolbox extends React.Component {
       <div id="ui" className={leftyUi ? 'overlay lefty' : 'overlay'}>
         <button onClick={() => this.handleToolChange(1)} className={(selectedTool === 1 ? 'pen-btn active' : 'pen-btn')}>ペン</button>
         <button onClick={() => this.handleToolChange(2)} className={(selectedTool === 2 ? 'eraser-btn active' : 'eraser-btn')}>消しゴム</button>
+        <button onClick={this.handleUndo}>元に戻す</button>
         <button onClick={this.handleDownload}>ダウンロード</button>
         <div className="color-picker"></div>
       

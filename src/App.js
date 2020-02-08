@@ -19,19 +19,9 @@ class App extends React.Component {
 
       penThicknessCoefficient: 16,
       eraserThicknessCoefficient: 64,
+
+      id: null,
     }
-
-    this.socket = io.connect('https://mucho613.space:8080');
-
-    this.socket.on('init', base64 => {
-      const image = new Image();
-      image.src = base64.imageData;
-      setTimeout(() => this.refs.canvas.initialize(image), 0);
-    });
-
-    this.socket.on('send user', msg => {
-      this.refs.canvas.draw(msg);
-    });
   }
 
   componentDidMount() {
@@ -39,6 +29,19 @@ class App extends React.Component {
 
     window.addEventListener('pageshow', e => e.persisted && window.location.reload());
     window.addEventListener('scroll', () => this.scrolled = true);
+
+    this.socket = io.connect('http://localhost:8080');
+
+    this.socket.on('init', base64 => {
+      const image = new Image();
+      image.src = base64.imageData;
+      setTimeout(() => this.refs.canvas.initialize(image), 0);
+      this.setState({id: this.socket.id});
+    });
+
+    this.socket.on('send user', msg => {
+      this.refs.canvas.draw(msg);
+    });
   }
 
   handleDraw = attribute => this.socket.emit('server send', attribute);
@@ -70,6 +73,7 @@ class App extends React.Component {
           onPenThicknessChange={this.handlePenThicknessChange}
           onEraserThicknessChange={this.handleEraserThicknessChange}
           onLeftyChange={this.handleLeftyChange}
+          onUndo={this.handleUndo}
           onDownload={this.handleDownload}
         />
 
@@ -82,6 +86,7 @@ class App extends React.Component {
           defaultAlpha={this.state.defaultAlpha}
           penThicknessCoefficient={this.state.penThicknessCoefficient}
           eraserThicknessCoefficient={this.state.eraserThicknessCoefficient}
+          id={this.state.id}
         />
       </div>
     );
