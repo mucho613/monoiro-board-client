@@ -5,7 +5,8 @@ class Canvas extends React.Component {
   canvasWidth = 2000;
   canvasHeight = 2000;
 
-  undoHistoryLength = 1000;
+  undoHistoryLength = 10;
+  mouseForce = 0.5;
 
   // Canvas 関連のやつ
   penGrounded = false;
@@ -47,7 +48,7 @@ class Canvas extends React.Component {
     // ペンを接地状態にする
     this.penGrounded = true;
 
-    this.actionStart();
+    this.actionStart(this.previousPositionX, this.previousPositionY, this.mouseForce);
   }
 
   handleMouseMove = e => {
@@ -55,7 +56,7 @@ class Canvas extends React.Component {
       let X = ~~(e.clientX - this.rectX);
       let Y = ~~(e.clientY - this.rectY);
 
-      this.penStroke(this.previousPositionX, this.previousPositionY, X, Y, 0.5);
+      this.penStroke(this.previousPositionX, this.previousPositionY, X, Y, this.mouseForce);
 
       this.previousPositionX = X;
       this.previousPositionY = Y;
@@ -70,7 +71,7 @@ class Canvas extends React.Component {
     this.penGrounded = false;
 
     if(X !== this.previousPositionX && Y !== this.previousPositionY) {
-      this.penStroke(this.previousPositionX, this.previousPositionY, X, Y, 0.5);
+      this.penStroke(this.previousPositionX, this.previousPositionY, X, Y, this.mouseForce);
       return;
     }
 
@@ -90,7 +91,7 @@ class Canvas extends React.Component {
     this.previousPositionX = ~~(touch.clientX - this.rectX);
     this.previousPositionY = ~~(touch.clientY - this.rectY);
 
-    this.actionStart();
+    this.actionStart(this.previousPositionX, this.previousPositionY, touch.force);
   }
 
   handleTouchMove = e => {
@@ -142,26 +143,36 @@ class Canvas extends React.Component {
     this.actionEnd();
   }
 
-  actionStart = () => {
+  actionStart = (x, y, force) => {
+    const thickness = this.props.selectedTool === 1
+      ? this.props.penThicknessCoefficient * force
+      : this.props.eraserThicknessCoefficient * force;
+
+    const tool = this.props.selectedTool === 1
+      ? 'pen'
+      : 'eraser';
+      
     this.undoHistory.push({
       id: this.props.id,
       action: [],
-      actionType: 'stroke',
-      left: this.canvasWidth,
-      right: 0,
-      top: this.canvasHeight,
-      bottom: 0
+      actionType: tool,
+      image: null,
+      isConvertedToImage: false,
+      left: x - thickness * force,
+      right: x + thickness * force,
+      top: y - thickness * force,
+      bottom: y + thickness * force
     });
 
     if(this.undoHistory.length > this.undoHistoryLength) {
       const history = this.undoHistory.shift();
-      if(history.actionType === 'image') {
-        this.destinationCanvasContext.drawImage(history.action, history.left, history.top);
-        console.log(history.action, history.left, history.top);
+      if(history.isConvertedToImage && history.action.tool === 'pen') {
+        this.destinationCanvasContext.drawImage(history.image, history.left, history.top);
       }
-      else if(history.actionType === 'stroke') {
+      // TODO: なんか違う気がする……
+      else {
         for(let j = 0; j < history.action.length; j++) {
-          this.drawToTempLayer(history.action[j]);
+          this.drawToDestLayer(history.action[j]);
         }
       }
     }
@@ -174,13 +185,13 @@ class Canvas extends React.Component {
     history.action.push(line);
 
     const left = line.x2 - line.thickness;
-    const top = line.y2 - line.thickness;
     const right = line.x2 + line.thickness;
+    const top = line.y2 - line.thickness;
     const bottom = line.y2 + line.thickness;
 
     if(history.left > left) history.left = left;
-    if(history.top > top) history.top = top;
     if(history.right < right) history.right = right;
+    if(history.top > top) history.top = top;
     if(history.bottom < bottom) history.bottom = bottom;
   }
 
@@ -209,11 +220,11 @@ class Canvas extends React.Component {
   
       context.stroke();
     }
-  
+
     const image = new Image(history.right - history.left, history.bottom - history.top);
     image.src = canvas.toDataURL('png');
-    history.action = image;
-    history.actionType = 'image';
+    history.image = image;
+    history.isConvertedToImage = true;
     console.log('Action End', this.undoHistory);
   }
 
@@ -228,10 +239,10 @@ class Canvas extends React.Component {
     for(let i = 0; i < this.undoHistory.length; i++) {
       const history = this.undoHistory[i];
 
-      if(history.actionType === 'image') {
-        this.temporaryCanvasContext.drawImage(history.action, history.left, history.top);
+      if(history.isConvertedToImage && history.action.tool === 'pen') {
+        this.temporaryCanvasContext.drawImage(history.image, history.left, history.top);
       }
-      else if(history.actionType === 'stroke') {
+      else {
         for(let j = 0; j < history.action.length; j++) {
           this.drawToTempLayer(history.action[j]);
         }
@@ -261,10 +272,18 @@ class Canvas extends React.Component {
     this.temporaryCanvasContext.lineTo(msg.x2, msg.y2);
     this.temporaryCanvasContext.lineCap = 'round';
     this.temporaryCanvasContext.lineWidth = msg.thickness;
+
     this.temporaryCanvasContext.strokeStyle = msg.color;
-    this.temporaryCanvasContext.globalCompositeOperation = msg.tool === 1
-      ? 'source-over'
-      : 'destination-out';
+    this.temporaryCanvasContext.strokeStyle = msg.tool === 1
+      ? msg.color
+      : '#f5f5f5';
+
+    // source-over で固定する……といってもデフォルトで既に source-over なのでコメントアウト
+    // this.temporaryCanvasContext.globalCompositeOperation = 'source-over';
+
+    // this.temporaryCanvasContext.globalCompositeOperation = msg.tool === 1
+    //   ? 'source-over'
+    //   : 'destination-out';
 
     this.temporaryCanvasContext.stroke();
   };
