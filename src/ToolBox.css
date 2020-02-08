@@ -1,5 +1,5 @@
 .overlay {
-  position: absolute;
+  position: fixed;
   background-color: rgba(207, 207, 207, 0.514);
   padding: 20px;
   margin: 20px 0 0 0;

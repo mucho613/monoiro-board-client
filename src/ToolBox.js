@@ -5,14 +5,28 @@ import '@simonwep/pickr/dist/themes/nano.min.css';
 
 import './ToolBox.css';
 
-class Toolbox extends React.Component {
-  handleToolChange = tool => this.props.onToolChange(tool);
-  handlePenColorChange = color => this.props.onPenColorChange(color);
-  handlePenThicknessChange = thickness => this.props.onPenThicknessChange(thickness);
-  handleEraserThicknessChange = thickness => this.props.onEraserThicknessChange(thickness);
-  handleLeftyChange = isLefty => this.props.onLeftyChange(isLefty);
-  handleUndo = () => this.props.onUndo();
-  handleDownload = () => this.props.onDownload();
+class ToolBox extends React.Component {
+  handleToolChange = () => this.props.onToolChange(this.state);
+
+  handlePenColorChange = (color, alpha) => this.setState({ penColor: color, alpha: alpha });
+  penThicknessChange = thickness => this.setState({ penThicknessCoefficient: thickness });
+  eraserThicknessChange = thickness => this.setState({ eraserThicknessCoefficient: thickness });
+  leftyChange = isLefty => this.setState({ isLefty: isLefty });
+  undo = () => this.props.onUndo();
+  download = () => this.props.onDownload();
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      penColor: '#555555',
+      alpha: 1.0,
+      leftyUi: false,
+      selectedTool: 'Pen',
+      penThicknessCoefficient: 16,
+      eraserThicknessCoefficient: 64
+    }
+  }
 
   componentDidMount() {
     const pickr = Pickr.create({
@@ -41,41 +55,38 @@ class Toolbox extends React.Component {
     });
 
     pickr.on('change', (color, instance) => {
-      this.handlePenColorChange(color.toHEXA().toString());
+      const rgba = color.toHEXA();
+      const rgbString = rgba.toString().substr(0, 7);
+      this.handlePenColorChange(rgbString, color.toRGBA()[3]);
       instance.applyColor();
     });
   }
 
   render() {
-    const selectedTool = this.props.toolState.selectedTool;
-    const penThicknessCoefficient = this.props.toolState.penThicknessCoefficient;
-    const eraserThicknessCoefficient = this.props.toolState.eraserThicknessCoefficient;
-    const leftyUi = this.props.toolState.leftyUi;
-
     return (
-      <div id="ui" className={leftyUi ? 'overlay lefty' : 'overlay'}>
-        <button onClick={() => this.handleToolChange(1)} className={(selectedTool === 1 ? 'pen-btn active' : 'pen-btn')}>ペン</button>
-        <button onClick={() => this.handleToolChange(2)} className={(selectedTool === 2 ? 'eraser-btn active' : 'eraser-btn')}>消しゴム</button>
-        <button onClick={this.handleUndo}>元に戻す</button>
-        <button onClick={this.handleDownload}>ダウンロード</button>
+      <div id="ui" className={this.state.leftyUi ? 'overlay lefty' : 'overlay'}>
+        <button onClick={() => this.handleToolChange('Pen')} className={(this.state.selectedTool === 'Pen' ? 'pen-btn active' : 'pen-btn')}>ペン</button>
+        <button onClick={() => this.handleToolChange('Eraser')} className={(this.state.selectedTool === 'Eraser' ? 'eraser-btn active' : 'eraser-btn')}>消しゴム</button>
+        <button onClick={this.undo}>元に戻す</button>
+        <button onClick={this.download}>ダウンロード</button>
         <div className="color-picker"></div>
       
         <div>
-          <div>ペンの太さ: {penThicknessCoefficient}</div>
-          <input onChange={e => this.handlePenThicknessChange(parseInt(e.target.value))} defaultValue={penThicknessCoefficient} type="range" min="8" max="256"></input>
+          <div>ペンの太さ: {this.state.penThicknessCoefficient}</div>
+          <input onChange={e => this.penThicknessChange(parseInt(e.target.value))} defaultValue={this.state.penThicknessCoefficient} type="range" min="8" max="256"></input>
         </div>
         
         <div>
-          <div>消しゴムの太さ: {eraserThicknessCoefficient}</div>
-          <input onChange={e => this.handleEraserThicknessChange(parseInt(e.target.value))} defaultValue={eraserThicknessCoefficient} type="range" min="8" max="256"></input>
+          <div>消しゴムの太さ: {this.state.eraserThicknessCoefficient}</div>
+          <input onChange={e => this.eraserThicknessChange(parseInt(e.target.value))} defaultValue={this.state.eraserThicknessCoefficient} type="range" min="8" max="256"></input>
         </div>
         
         <div>
-          <input onChange={e => this.handleLeftyChange(e.target.checked)} type="checkbox"></input>左利き
+          <input onChange={e => this.leftyChange(e.target.checked)} type="checkbox"></input>左利き
         </div>
       </div>
     );
   }
 }
 
-export default Toolbox;
+export default ToolBox;
