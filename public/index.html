@@ -1,64 +1,20 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <link rel="icon" href="favicon.ico">
-  <link rel="stylesheet" href="css/style.css">
-  <title>MONOIRO Board</title>
-
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css"/> <!-- 'nano' theme -->
-  <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
-
-</head>
-<body>
-  <div class="splash" id="splash">
-    <h1>MONOIRO Board</h1>
-    <p class="japanese">
-      モノイロボード 略してモノボ
-    </p>
-    <button id="splash-close">閉じる</button>
-  </div>
-
-  <div id="ui" class="overlay">
-    <a id="download-link"></a>
-    <button class="tool-button pen-btn" id="pen-btn">ペン</button>
-    <button class="tool-button eraser-btn" id="eraser-btn">消しゴム</button>
-    <button class="tool-button all-erase-btn" id="all-erase-btn" disabled>全消し</button>
-    <button id="download-button">ダウンロード</button>
-    <div class="color-picker"></div>
-
-    <div>
-      <div>ペンの太さ: <span id="pen-thickness-indicator"></span></div>
-      <input id="pen-thickness" value="16" type="range" min="16" max="256">
-    </div>
-
-    <div>
-      <div>消しゴムの太さ: <span id="eraser-thickness-indicator"></span></div>
-      <input id="eraser-thickness" value="64" type="range" min="32" max="512">
-    </div>
-
-    <div>
-      <input id="lefty-switch" type="checkbox" value="1">左利き
-    </div>
-  </div>
-
-  <div id="canvas-wrapper" class="canvas-wrapper">
-    <canvas id="canvas" width="2000" height="2000"></canvas>
-    <canvas id="pen" width="2000" height="2000"></canvas>
-  </div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
-  <script src="js/script.js"></script>
-
-  <!-- The core Firebase JS SDK is always required and must be listed first -->
-  <script src="/__/firebase/7.7.0/firebase-app.js"></script>
-
-  <!-- TODO: Add SDKs for Firebase products that you want to use
-      https://firebase.google.com/docs/web/setup#available-libraries -->
-
-  <!-- Initialize Firebase -->
-  <script src="/__/firebase/init.js"></script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Drawing chat at MONOIRO Art Club"
+    />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <title>MONOIRO Board</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
 </html>
