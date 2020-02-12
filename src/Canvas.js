@@ -35,7 +35,18 @@ class Canvas extends React.Component {
 
   update = queue => {
     for(let i = 0; i < queue.length; i++) {
-      queue[i] 
+      // image から描画する
+      if(queue[i].image) {
+        const image = queue[i].image;
+        this.refs.destinationCanvasPiece.commit(image);
+      }
+      // canvas から描画する
+      else if(queue[i].canvas) {
+        const imageBase64 = queue[i].canvas.getImageBase64();
+        const image = new Image(queue[i].right - queue[i].left, queue[i].bottom - queue[i].top);
+        image.src = imageBase64;
+        this.refs.destinationCanvasPiece.commit(image);
+      }
     }
   }
 
@@ -47,8 +58,8 @@ class Canvas extends React.Component {
 
   render() {
     return (
-      <div>
-        <DestinationCanvasPiece width={this.canvasWidth} height={this.canvasHeight} />
+      <div className='canvas'>
+        <DestinationCanvasPiece ref={'destinationCanvasPiece'} canvasWidth={this.canvasWidth} canvasHeight={this.canvasHeight} />
       </div>
     );
   }

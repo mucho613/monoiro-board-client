@@ -4,6 +4,11 @@ import './Canvas.css';
 class DestinationCanvasPiece extends React.Component {
   componentDidMount() {
     this.context = this.refs.canvas.getContext('2d');
+    this.context.beginPath();
+    this.context.strokeStyle = '#000000';
+    this.context.moveTo(0, 0,)
+    this.context.lineTo(100, 100);
+    this.context.stroke();
   }
 
   commit = action => {
@@ -20,7 +25,7 @@ class DestinationCanvasPiece extends React.Component {
 
   render() {
     return (
-      <canvas ref="canvas" width={this.props.canvasWidth} height={this.props.canvasHeight}></canvas>
+      <canvas ref="canvas" className="destination-canvas" width={this.props.canvasWidth} height={this.props.canvasHeight}></canvas>
     );
   }
 }

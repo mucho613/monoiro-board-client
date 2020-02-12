@@ -3,6 +3,8 @@ import React from 'react';
 import CanvasController from './CanvasController';
 import ToolBox from './ToolBox';
 
+import './App.css';
+
 class Controller extends React.Component {
   handleToolChange = tool => this.setState({ selectedTool: tool });
   handleUndo = () => this.onUndo();
@@ -18,7 +20,7 @@ class Controller extends React.Component {
 
   render() {
     return (
-      <div>
+      <div className="controller">
         <ToolBox
           onToolChange={this.handleToolChange}
           onUndo={this.handleUndo}

@@ -3,9 +3,15 @@ import './Canvas.css';
 
 class TemporaryCanvas extends React.Component {
   // TODO: props で渡されるようにしよう
-  canvas = React.createRef();
   canvasWidth = 2000;
   canvasHeight = 2000;
+
+  constructor(props) {
+    super(props);
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = this.canvasWidth;
+    this.canvas.height = this.canvasHeight;
+  }
 
   componentDidMount() {
     this.context = this.refs.canvas.getContext('2d');
@@ -25,14 +31,12 @@ class TemporaryCanvas extends React.Component {
     this.context.stroke();
   }
 
-  getImageBase64 = () => this.canvas.current.toDataURL();
+  getImageBase64 = () => this.canvas.toDataURL();
 
   shouldComponentUpdate = () => false;
 
   render() {
-    return (
-      <canvas ref={this.canvas} width={this.canvasWidth} height={this.canvasHeight}></canvas>
-    );
+    return this.canvas;
   }
 }
 

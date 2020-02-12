@@ -18,7 +18,6 @@ class App extends React.Component {
     this.history = new History(this.historyQueueMaxLength, this.socket);
 
     this.state = {
-      splashWindowIsVisible: true,
       leftyUi: false,
 
       selectedTool: 'Pen',
@@ -47,7 +46,10 @@ class App extends React.Component {
     });
   }
 
-  handleActionStart = () => this.history.localActionStart(this.props.tool, this.props.penColor, this.props.alpha);
+  handleActionStart = () => {
+    this.history.localActionStart(this.props.tool, this.props.penColor, this.props.alpha);
+    this.canvasUpdate();
+  }
   handleActionUpdate = line => {
     this.history.localActionUpdate(line);
     this.canvasUpdate();
@@ -76,11 +78,6 @@ class App extends React.Component {
   render() {
     return (
       <div className="App">
-        <div className={this.state.splashWindowIsVisible ? 'splash' : 'splash hide'}>
-          <h1>MONOIRO Board</h1>
-          <button onClick={e => this.setState({ splashWindowIsVisible: false })}>閉じる</button>
-        </div>
-        
         <Controller
           onToolChange={this.handleToolChange}
           onUndo={this.handleUndo}

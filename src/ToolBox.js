@@ -64,7 +64,7 @@ class ToolBox extends React.Component {
 
   render() {
     return (
-      <div id="ui" className={this.state.leftyUi ? 'overlay lefty' : 'overlay'}>
+      <div className={this.state.leftyUi ? 'tool-box lefty' : 'tool-box'}>
         <button onClick={() => this.handleToolChange('Pen')} className={(this.state.selectedTool === 'Pen' ? 'pen-btn active' : 'pen-btn')}>ペン</button>
         <button onClick={() => this.handleToolChange('Eraser')} className={(this.state.selectedTool === 'Eraser' ? 'eraser-btn active' : 'eraser-btn')}>消しゴム</button>
         <button onClick={this.undo}>元に戻す</button>
