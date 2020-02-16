@@ -6,27 +6,34 @@ import '@simonwep/pickr/dist/themes/nano.min.css';
 import './ToolBox.css';
 
 class ToolBox extends React.Component {
-  handleToolChange = () => this.props.onToolChange(this.state);
-
-  handlePenColorChange = (color, alpha) => this.setState({ penColor: color, alpha: alpha });
-  penThicknessChange = thickness => this.setState({ penThicknessCoefficient: thickness });
-  eraserThicknessChange = thickness => this.setState({ eraserThicknessCoefficient: thickness });
-  leftyChange = isLefty => this.setState({ isLefty: isLefty });
-  undo = () => this.props.onUndo();
-  download = () => this.props.onDownload();
-
   constructor(props) {
     super(props);
-
     this.state = {
-      penColor: '#555555',
-      alpha: 1.0,
-      leftyUi: false,
-      selectedTool: 'Pen',
-      penThicknessCoefficient: 16,
-      eraserThicknessCoefficient: 64
+      tools: props.tools
     }
   }
+
+  handleToolChange = tools => this.props.onToolChange(tools);
+  handleSelectedToolChange = tool => this.props.onSelectedToolChange(tool);
+
+  handlePenColorChange = (color, alpha) => {
+    const tools = this.state.tools;
+    tools.pen.setColor(color);
+    tools.pen.setAlpha(alpha);
+    this.props.onToolChange(tools);
+  }
+  penThicknessChange = value => {
+    const tools = this.state.tools;
+    tools.pen.setThicknessCoefficient(value);
+    this.props.onToolChange(tools);
+  };
+  eraserThicknessChange = value => {
+    const tools = this.state.tools;
+    tools.eraser.setThicknessCoefficient(value);
+    this.props.onToolChange(tools);
+  }
+  handleUndo = () => this.props.onUndo();
+  handleDownload = () => this.props.onDownload();
 
   componentDidMount() {
     const pickr = Pickr.create({
@@ -64,25 +71,21 @@ class ToolBox extends React.Component {
 
   render() {
     return (
-      <div className={this.state.leftyUi ? 'tool-box lefty' : 'tool-box'}>
-        <button onClick={() => this.handleToolChange('Pen')} className={(this.state.selectedTool === 'Pen' ? 'pen-btn active' : 'pen-btn')}>ペン</button>
-        <button onClick={() => this.handleToolChange('Eraser')} className={(this.state.selectedTool === 'Eraser' ? 'eraser-btn active' : 'eraser-btn')}>消しゴム</button>
-        <button onClick={this.undo}>元に戻す</button>
-        <button onClick={this.download}>ダウンロード</button>
+      <div className={'tool-box'}>
+        <button onClick={() => this.handleSelectedToolChange(this.props.tools.pen)} className={(this.props.selectedTool === this.props.tools.pen ? 'pen-btn active' : 'pen-btn')}>ペン</button>
+        <button onClick={() => this.handleSelectedToolChange(this.props.tools.eraser)} className={(this.props.selectedTool === this.props.tools.eraser ? 'eraser-btn active' : 'eraser-btn')}>消しゴム</button>
+        <button onClick={this.handleUndo}>元に戻す</button>
+        <button onClick={this.handleDownload}>ダウンロード</button>
         <div className="color-picker"></div>
       
         <div>
-          <div>ペンの太さ: {this.state.penThicknessCoefficient}</div>
-          <input onChange={e => this.penThicknessChange(parseInt(e.target.value))} defaultValue={this.state.penThicknessCoefficient} type="range" min="8" max="256"></input>
+          <div>ペンの太さ: {this.props.tools.pen.thicknessCoefficient}</div>
+          <input onChange={e => this.penThicknessChange(e.target.value)} defaultValue={this.props.tools.pen.thicknessCoefficient} type="range" min="8" max="256"></input>
         </div>
         
         <div>
-          <div>消しゴムの太さ: {this.state.eraserThicknessCoefficient}</div>
-          <input onChange={e => this.eraserThicknessChange(parseInt(e.target.value))} defaultValue={this.state.eraserThicknessCoefficient} type="range" min="8" max="256"></input>
-        </div>
-        
-        <div>
-          <input onChange={e => this.leftyChange(e.target.checked)} type="checkbox"></input>左利き
+          <div>消しゴムの太さ: {this.props.tools.eraser.thicknessCoefficient}</div>
+          <input onChange={e => this.eraserThicknessChange(e.target.value)} defaultValue={this.props.tools.eraser.thicknessCoefficient} type="range" min="8" max="256"></input>
         </div>
       </div>
     );

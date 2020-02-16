@@ -62,7 +62,6 @@ class CanvasController extends React.Component {
     const currentForce = touch.force;
 
     if(this.initialTouch) {
-      force = 0;
       this.previousForce = currentForce;
       this.initialTouch = false;
     } 
@@ -85,8 +84,8 @@ class CanvasController extends React.Component {
 
   getCanvasPositionFromClientPosition = (x, y) => {
     return {
-      x: this.canvasController.scrollLeft - x,
-      y: this.canvasController.scrollTop - y
+      x: x + window.pageXOffset,
+      y: y + window.pageYOffset
     }
   }
 

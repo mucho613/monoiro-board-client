@@ -6,8 +6,9 @@ import ToolBox from './ToolBox';
 import './App.css';
 
 class Controller extends React.Component {
-  handleToolChange = tool => this.setState({ selectedTool: tool });
-  handleUndo = () => this.onUndo();
+  handleToolChange = tools => this.props.onToolChange(tools);
+  handleSelectedToolChange = tool => this.props.onSelectedToolChange(tool);
+  handleUndo = () => this.props.onUndo();
   handleDownload = () => {
     const base64 = this.refs.canvas.getCanvasImageBase64();
     const newWindow = window.open();
@@ -22,7 +23,10 @@ class Controller extends React.Component {
     return (
       <div className="controller">
         <ToolBox
+          selectedTool={this.props.selectedTool}
+          tools={this.props.tools}
           onToolChange={this.handleToolChange}
+          onSelectedToolChange={this.handleSelectedToolChange}
           onUndo={this.handleUndo}
           onDownload={this.handleDownload} />
         <CanvasController
