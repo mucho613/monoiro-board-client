@@ -1,9 +1,9 @@
-import TemporaryCanvas from './TemporaryCanvas'
-
 class History {
   queue = [];
   queueMaxLength = null;
   socket = null;
+  temporaryCanvas;
+  temporaryCanvasContext;
 
   constructor(queueMaxLength, socket) {
     this.queueMaxLength = queueMaxLength;
@@ -25,6 +25,9 @@ class History {
     this.socket.on('undo', id => {
       this.undo(id);
     });
+
+    this.temporaryCanvas = document.createElement('canvas');
+    this.temporaryCanvasContext = this.temporaryCanvas.getContext('2d');
   }
 
   // 自分の操作
@@ -55,7 +58,6 @@ class History {
       id: id,
       tool: tool,
       stroke: [],
-      canvas: new TemporaryCanvas({ tool: tool }),
       image: null,
       left: 2048,
       right: 0,
@@ -78,28 +80,10 @@ class History {
 
       const thickness = point.force * action.tool.thicknessCoefficient
 
-      if(action.stroke.length > 1) {
-        action.canvas.strokeAdd({
-          x1: action.stroke[action.stroke.length - 2].x,
-          y1: action.stroke[action.stroke.length - 2].y,
-          x2: point.x,
-          y2: point.y,
-          thickness: thickness
-        });
-      }
-
       const left = point.x - thickness;
       const right = point.x + thickness;
       const top = point.y - thickness;
       const bottom = point.y + thickness;
-
-      // 最初の点でセットする
-      if(action.left === null) {
-        action.left = left;
-        action.right = right;
-        action.top = top;
-        action.bottom = bottom;
-      }
 
       if(action.left > left) action.left = left;
       if(action.right < right) action.right = right;
@@ -116,18 +100,38 @@ class History {
   actionEnd = id => {
     const action = this.queue[this.getLatestActionIndexById(id)];
 
-    createImageBitmap(action.canvas.getCanvasElement(), action.left, action.top, action.right - action.left, action.bottom - action.top)
-      .then(imageBitmap => action.image = imageBitmap);
+    if(action && action.stroke.length > 1) {
+      const width = action.right - action.left;
+      const height = action.bottom - action.top;
+      this.temporaryCanvas.width = width;
+      this.temporaryCanvas.height = height;
+      this.temporaryCanvasContext.clearRect(0, 0, width, height);
+
+      this.temporaryCanvasContext.lineCap = 'round';
+      this.temporaryCanvasContext.lineJoin = 'round';
+      this.temporaryCanvasContext.strokeStyle = action.tool.color;
+
+      for(let i = 1; i < action.stroke.length; i++) {
+        const previousPoint = action.stroke[i - 1];
+        const point = action.stroke[i];
+        const thickness = point.force * action.tool.thicknessCoefficient;
+        
+        this.temporaryCanvasContext.beginPath();
+        this.temporaryCanvasContext.lineWidth = thickness;
+        this.temporaryCanvasContext.moveTo(previousPoint.x - action.left, previousPoint.y - action.top);
+        this.temporaryCanvasContext.lineTo(point.x - action.left, point.y - action.top);
+        this.temporaryCanvasContext.stroke();
+      }
+
+      createImageBitmap(this.temporaryCanvas).then(imageBitmap => action.image = imageBitmap);
+    }
 
     console.log('Action End', this.queue);
   }
 
   undo = id => {
     const action = this.queue[this.getLatestActionIndexById(id)];
-    if(action) {
-      action.isActive = false;
-      console.log("Undo", this.queue);
-    } 
+    if(action) action.isActive = false;
     return action;
   }
   
