@@ -1,7 +1,9 @@
 class History {
   queue = [];
-  queueMaxLength = null;
+  queueMaxLength;
   socket = null;
+  destinationCanvas;
+  destinationCanvasContext;
   temporaryCanvas;
   temporaryCanvasContext;
 
@@ -26,8 +28,13 @@ class History {
       this.undo(id);
     });
 
-    this.temporaryCanvas = document.createElement('canvas');
-    this.temporaryCanvasContext = this.temporaryCanvas.getContext('2d');
+    this.destinationCanvas = document.createElement('canvas');
+    this.destinationCanvas.width = 2048;
+    this.destinationCanvas.height = 2048;
+    this.destinationCanvasContext = this.destinationCanvas.getContext('2d');
+
+    // this.temporaryCanvas = document.createElement('canvas');
+    // this.temporaryCanvasContext = this.temporaryCanvas.getContext('2d');
   }
 
   // 自分の操作
@@ -67,6 +74,53 @@ class History {
 
     // History に操作を追加する
     this.queue.push(action);
+
+    if(this.queue.length > this.queueMaxLength) {
+      const action = this.queue.shift();
+
+      if(action.isActive) {
+        this.destinationCanvasContext.globalAlpha = action.tool.alpha;
+        this.destinationCanvasContext.globalCompositeOperation = action.tool.type === 'pen'
+          ? 'source-over'
+          : 'destination-out';
+
+        if(action.image) {
+          this.destinationCanvasContext.drawImage(action.image, action.left, action.top);
+        }
+        // HistoryQueue の終端に Action があるのに、もしも image 変換されてなかった場合は、
+        // 即時的な canvas に描画してから destinationCanvas に描画する
+        // (destinationCanvasContext で描画すると半透明線をうまく扱えないため)
+        else if(action.stroke.length > 1) {
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+
+          const width = action.right - action.left;
+          const height = action.bottom - action.top;
+          context.width = width;
+          context.height = height;
+          context.clearRect(0, 0, width, height);
+    
+          context.lineCap = 'round';
+          context.lineJoin = 'round';
+          context.strokeStyle = action.tool.color;
+    
+          for(let i = 1; i < action.stroke.length; i++) {
+            const previousPoint = action.stroke[i - 1];
+            const point = action.stroke[i];
+            const thickness = point.force * action.tool.thicknessCoefficient;
+            
+            context.beginPath();
+            context.lineWidth = thickness;
+            context.moveTo(previousPoint.x - action.left, previousPoint.y - action.top);
+            context.lineTo(point.x - action.left, point.y - action.top);
+            context.stroke();
+          }
+    
+          this.context.drawImage(this.temporaryCanvas, action.left, action.top);
+        }
+      }
+    }
+
     console.log('Action Start', this.queue);
   }
 
@@ -101,29 +155,32 @@ class History {
     const action = this.queue[this.getLatestActionIndexById(id)];
 
     if(action && action.stroke.length > 1) {
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+
       const width = action.right - action.left;
       const height = action.bottom - action.top;
-      this.temporaryCanvas.width = width;
-      this.temporaryCanvas.height = height;
-      this.temporaryCanvasContext.clearRect(0, 0, width, height);
+      canvas.width = width;
+      canvas.height = height;
+      context.clearRect(0, 0, width, height);
 
-      this.temporaryCanvasContext.lineCap = 'round';
-      this.temporaryCanvasContext.lineJoin = 'round';
-      this.temporaryCanvasContext.strokeStyle = action.tool.color;
+      context.lineCap = 'round';
+      context.lineJoin = 'round';
+      context.strokeStyle = action.tool.color;
 
       for(let i = 1; i < action.stroke.length; i++) {
         const previousPoint = action.stroke[i - 1];
         const point = action.stroke[i];
         const thickness = point.force * action.tool.thicknessCoefficient;
         
-        this.temporaryCanvasContext.beginPath();
-        this.temporaryCanvasContext.lineWidth = thickness;
-        this.temporaryCanvasContext.moveTo(previousPoint.x - action.left, previousPoint.y - action.top);
-        this.temporaryCanvasContext.lineTo(point.x - action.left, point.y - action.top);
-        this.temporaryCanvasContext.stroke();
+        context.beginPath();
+        context.lineWidth = thickness;
+        context.moveTo(previousPoint.x - action.left, previousPoint.y - action.top);
+        context.lineTo(point.x - action.left, point.y - action.top);
+        context.stroke();
       }
 
-      createImageBitmap(this.temporaryCanvas).then(imageBitmap => action.image = imageBitmap);
+      action.image = canvas;
     }
 
     console.log('Action End', this.queue);
@@ -141,7 +198,18 @@ class History {
     }
   }
 
-  getQueue = () => this.queue;
+  getQueue = () => {
+    return [{
+      isActive: true,
+      id: 'Unundoable Destination Layer',
+      tool: { type: 'destinationcanvas', alpha: 1.0 },
+      image: this.destinationCanvas,
+      left: 0,
+      right: 2048,
+      top: 0,
+      bottom: 2048
+    }].concat(this.queue);
+  }
 }
 
 export default History;

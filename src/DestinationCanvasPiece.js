@@ -11,9 +11,10 @@ class DestinationCanvasPiece extends React.Component {
 
   commit = action => {
     this.context.globalAlpha = action.tool.alpha;
-    this.context.globalCompositeOperation = action.tool.type === 'pen'
-      ? 'source-over'
-      : 'destination-out';
+    this.context.globalCompositeOperation =
+      action.tool.type === 'pen' || action.tool.type === 'destinationcanvas'
+        ? 'source-over'
+        : 'destination-out';
 
     if(action.image) {
       this.context.drawImage(action.image, action.left, action.top);
