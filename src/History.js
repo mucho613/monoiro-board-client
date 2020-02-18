@@ -2,36 +2,41 @@ class History {
   queue = [];
   queueMaxLength;
   socket = null;
-  destinationCanvas;
-  destinationCanvasContext;
+  fixedImageCanvas;
+  fixedImageCanvasContext;
   temporaryCanvas;
   temporaryCanvasContext;
 
-  constructor(queueMaxLength, socket) {
+  constructor(queueMaxLength, socket, canvasUpdateCallback) {
     this.queueMaxLength = queueMaxLength;
     this.socket = socket;
 
     // 他のユーザーの操作
     this.socket.on('action start', (id, tool) => {
       this.actionStart(id, tool);
+      // TODO: これ外側のモジュールに依存しまくりでかっこ悪いからやめたい
+      canvasUpdateCallback();
     });
 
     this.socket.on('action update', (id, line) => {
       this.actionUpdate(id, line);
+      canvasUpdateCallback();
     });
 
     this.socket.on('action end', id => {
       this.actionEnd(id);
+      canvasUpdateCallback();
     });
 
     this.socket.on('undo', id => {
       this.undo(id);
+      canvasUpdateCallback();
     });
 
-    this.destinationCanvas = document.createElement('canvas');
-    this.destinationCanvas.width = 2048;
-    this.destinationCanvas.height = 2048;
-    this.destinationCanvasContext = this.destinationCanvas.getContext('2d');
+    this.fixedImageCanvas = document.createElement('canvas');
+    this.fixedImageCanvas.width = 2048;
+    this.fixedImageCanvas.height = 2048;
+    this.fixedImageCanvasContext = this.fixedImageCanvas.getContext('2d');
 
     // this.temporaryCanvas = document.createElement('canvas');
     // this.temporaryCanvasContext = this.temporaryCanvas.getContext('2d');
@@ -58,6 +63,52 @@ class History {
     this.socket.emit('undo');
   }
 
+  setFixedImage = base64 => {
+    const image = new Image(2048, 2048);
+    image.src = base64;
+    this.fixedImageCanvasContext.drawImage(image, 0, 0);
+  }
+
+  setQueue = queue => {
+    // image が入ってないかもしれないので、ここで全部 image を作る
+    for(let i = 0; i < queue.length; i++) {
+      const action = queue[i];
+
+      if(action.image === null && action.stroke.length > 1) {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        const width = action.right - action.left;
+        const height = action.bottom - action.top;
+
+        canvas.width = width;
+        canvas.height = height;
+
+        context.clearRect(0, 0, width, height);
+
+        context.lineCap = 'round';
+        context.lineJoin = 'round';
+        context.strokeStyle = action.tool.color;
+
+        for(let i = 1; i < action.stroke.length; i++) {
+          const previousPoint = action.stroke[i - 1];
+          const point = action.stroke[i];
+          const thickness = point.force * action.tool.thicknessCoefficient;
+          
+          context.beginPath();
+          context.lineWidth = thickness;
+          context.moveTo(previousPoint.x - action.left, previousPoint.y - action.top);
+          context.lineTo(point.x - action.left, point.y - action.top);
+          context.stroke();
+        }
+
+        action.image = canvas;
+      }
+    }
+
+    this.queue = queue;
+  }
+
   actionStart = (id, tool) => {
     // Action のひな形
     const action = {
@@ -79,25 +130,27 @@ class History {
       const action = this.queue.shift();
 
       if(action.isActive) {
-        this.destinationCanvasContext.globalAlpha = action.tool.alpha;
-        this.destinationCanvasContext.globalCompositeOperation = action.tool.type === 'pen'
+        this.fixedImageCanvasContext.globalCompositeOperation = action.tool.type === 'pen'
           ? 'source-over'
           : 'destination-out';
 
         if(action.image) {
-          this.destinationCanvasContext.drawImage(action.image, action.left, action.top);
+          this.fixedImageCanvasContext.globalAlpha = 1.0;
+          this.fixedImageCanvasContext.drawImage(action.image, action.left, action.top);
         }
         // HistoryQueue の終端に Action があるのに、もしも image 変換されてなかった場合は、
-        // 即時的な canvas に描画してから destinationCanvas に描画する
-        // (destinationCanvasContext で描画すると半透明線をうまく扱えないため)
+        // 即時的な canvas に描画してから fixedImageCanvas に描画する
+        // (fixedImageCanvasContext で描画すると半透明線をうまく扱えないため)
         else if(action.stroke.length > 1) {
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d');
 
           const width = action.right - action.left;
           const height = action.bottom - action.top;
-          context.width = width;
-          context.height = height;
+
+          canvas.width = width;
+          canvas.height = height;
+
           context.clearRect(0, 0, width, height);
     
           context.lineCap = 'round';
@@ -116,7 +169,8 @@ class History {
             context.stroke();
           }
     
-          this.context.drawImage(this.temporaryCanvas, action.left, action.top);
+          this.fixedImageCanvasContext.globalAlpha = 1.0;
+          this.fixedImageCanvasContext.drawImage(canvas, action.left, action.top);
         }
       }
     }
@@ -160,8 +214,10 @@ class History {
 
       const width = action.right - action.left;
       const height = action.bottom - action.top;
+
       canvas.width = width;
       canvas.height = height;
+
       context.clearRect(0, 0, width, height);
 
       context.lineCap = 'round';
@@ -194,22 +250,16 @@ class History {
   
   getLatestActionIndexById = id => {
     for(let i = this.queue.length - 1; i >= 0; i--) {
-      if(this.queue[i].id === id && this.queue[i].isActive) return i;
+      const action = this.queue[i];
+      if(action.id === id && action.isActive) return i;
     }
   }
 
-  getQueue = () => {
-    return [{
-      isActive: true,
-      id: 'Unundoable Destination Layer',
-      tool: { type: 'destinationcanvas', alpha: 1.0 },
-      image: this.destinationCanvas,
-      left: 0,
-      right: 2048,
-      top: 0,
-      bottom: 2048
-    }].concat(this.queue);
+  getFixedImage = () => {
+    return this.fixedImageCanvas;
   }
+
+  getQueue = () => this.queue;
 }
 
 export default History;

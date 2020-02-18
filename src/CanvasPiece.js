@@ -1,7 +1,7 @@
 import React from 'react';
 import './Canvas.css';
 
-class DestinationCanvasPiece extends React.Component {
+class CanvasPiece extends React.Component {
   componentDidMount() {
     this.context = this.refs.canvas.getContext('2d');
 
@@ -11,8 +11,7 @@ class DestinationCanvasPiece extends React.Component {
 
   commit = action => {
     this.context.globalAlpha = action.tool.alpha;
-    this.context.globalCompositeOperation =
-      action.tool.type === 'pen' || action.tool.type === 'destinationcanvas'
+    this.context.globalCompositeOperation = action.tool.type === 'pen'
         ? 'source-over'
         : 'destination-out';
 
@@ -48,15 +47,20 @@ class DestinationCanvasPiece extends React.Component {
 
   clear = () => this.context.clearRect(0, 0, this.props.canvasWidth, this.props.canvasHeight);
 
-  initialize = image => this.context.drawImage(image, 0, 0);
+  // fixedImageCanvas を入れる用
+  initialize = image => {
+    this.context.globalAlpha = 1.0;
+    this.context.globalCompositeOperation = 'source-over';
+    this.context.drawImage(image, 0, 0);
+  }
 
   shouldComponentUpdate = () => false;
   
   render() {
     return (
-      <canvas ref="canvas" className="destination-canvas" width={this.props.canvasWidth} height={this.props.canvasHeight}></canvas>
+      <canvas ref="canvas" className="canvas-piece" width={this.props.canvasWidth} height={this.props.canvasHeight}></canvas>
     );
   }
 }
 
-export default DestinationCanvasPiece;
+export default CanvasPiece;
