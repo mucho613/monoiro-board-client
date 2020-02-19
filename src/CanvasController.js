@@ -14,32 +14,34 @@ class CanvasController extends React.Component {
 
   stopScroll = e => e.preventDefault();
 
-  handleMouseDown = e => {
-    // 主ボタンのクリック時しか反応しない
-    if(e.button === 0) {
-      const position = this.getCanvasPositionFromClientPosition(e.clientX, e.clientY);
-      // ペンを接地状態にする
-      this.penGrounded = true;
-      this.props.onStrokeStart(position.x, position.y, this.mouseForce);
-    }
-  }
+  // タッチすると MouseDown が発生するのやめてほしいのでコメントアウト(マウスで描けない)
+  // handleMouseDown = e => {
+  //   // 主ボタンのクリック時しか反応しない
+  //   if(e.button === 0) {
+  //     const position = this.getCanvasPositionFromClientPosition(e.clientX, e.clientY);
+  //     // ペンを接地状態にする
+  //     this.penGrounded = true;
+  //     this.props.onStrokeStart(position.x, position.y, this.mouseForce);
+  //     window.alert("Mouse down");
+  //   }
+  // }
 
-  handleMouseMove = e => {
-    if(e.button === 0 && this.penGrounded) {
-      const position = this.getCanvasPositionFromClientPosition(e.clientX, e.clientY);
-      this.props.onStrokeMove(position.x, position.y, this.mouseForce);
-    }
-  }
+  // handleMouseMove = e => {
+  //   if(e.button === 0 && this.penGrounded) {
+  //     const position = this.getCanvasPositionFromClientPosition(e.clientX, e.clientY);
+  //     this.props.onStrokeMove(position.x, position.y, this.mouseForce);
+  //   }
+  // }
 
-  handleMouseUp = e => {
-    // 主ボタンのクリック時しか反応しない
-    if(e.button === 0) {
-      const position = this.getCanvasPositionFromClientPosition(e.clientX, e.clientY);
-      // ペンの接地状態を解除
-      this.penGrounded = false;
-      this.props.onStrokeEnd(position.x, position.y, this.mouseForce);
-    }
-  }
+  // handleMouseUp = e => {
+  //   // 主ボタンのクリック時しか反応しない
+  //   if(e.button === 0) {
+  //     const position = this.getCanvasPositionFromClientPosition(e.clientX, e.clientY);
+  //     // ペンの接地状態を解除
+  //     this.penGrounded = false;
+  //     this.props.onStrokeEnd(position.x, position.y, this.mouseForce);
+  //   }
+  // }
 
   handleTouchStart = e => {
     const touch = e.changedTouches[0];

@@ -9,13 +9,12 @@ import History from './History';
 import Tool from './Tool';
 
 class App extends React.Component {
-  historyQueueMaxLength = 50;
+  historyQueueMaxLength = 5;
 
   constructor() {
     super();
 
-    this.socket = io.connect('https://mucho613.space');
-    // this.socket = io.connect('192.168.11.2:443');
+    this.socket = io.connect('https://mucho613.space:8081');
 
     this.history = new History(this.historyQueueMaxLength, this.socket, this.canvasUpdate);
     
@@ -50,7 +49,6 @@ class App extends React.Component {
   }
   handleActionStart = (x, y, force) => {
     this.history.localActionStart(Object.assign({}, this.state.selectedTool));
-    this.history.localActionUpdate({ x: x, y: y, force: force });
     this.canvasUpdate();
   }
   handleActionUpdate = (x, y, force) => {
@@ -58,7 +56,6 @@ class App extends React.Component {
     this.canvasUpdate();
   }
   handleActionEnd = (x, y, force) => {
-    this.history.localActionUpdate({ x: x, y: y, force: force });
     this.history.localActionEnd();
     this.canvasUpdate();
   }
