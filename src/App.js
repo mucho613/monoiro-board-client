@@ -17,15 +17,7 @@ class App extends React.Component {
     this.socket = io.connect('http://192.168.11.2:8080');
 
     this.history = new History(this.historyQueueMaxLength, this.socket, this.canvasUpdate);
-
-    this.socket.on('init', initializeData => {
-      this.history.setFixedImage(initializeData.fixedImage);
-      this.history.setQueue(initializeData.historyQueue);
-      this.canvasUpdate();
-      this.setState({ id: this.socket.id });
-      console.log('Initial history', initializeData.historyQueue);
-    });
-
+    
     this.tools = {
       pen: new Tool('pen', 'ペン', '#555555', 1.0, 16),
       eraser: new Tool('eraser', '消しゴム', '#ffffff', 1.0, 64)
@@ -36,15 +28,19 @@ class App extends React.Component {
       tools: this.tools,
       selectedTool: this.tools.pen
     }
+
+    this.socket.on('init', initializeData => {
+      this.history.setQueue(initializeData.historyQueue);
+
+      this.setState({ id: this.socket.id });
+      this.canvasUpdate();
+    });
   }
 
   componentDidMount() {
-    this.downloadLink = document.getElementById('download-link');
-
     window.addEventListener('pageshow', e => e.persisted && window.location.reload());
     window.addEventListener('scroll', () => this.scrolled = true);
   }
-
   handleActionStart = (x, y, force) => {
     this.history.localActionStart(Object.assign({}, this.state.selectedTool));
     this.history.localActionUpdate({ x: x, y: y, force: force });
@@ -64,7 +60,7 @@ class App extends React.Component {
     this.canvasUpdate();
   }
   handleDownload = () => {
-    const base64 = this.refs.canvas.getCanvasImageBase64();
+    const base64 = this.history.fixedImageCanvas.toDataURL();
     const newWindow = window.open();
     newWindow.document.write('<img src="' + base64 + '" style="width:100%; height:100%; object-fit: contain;"></img>');
   }
@@ -73,7 +69,7 @@ class App extends React.Component {
   handleSelectedToolChange = tool => this.setState({ selectedTool: tool });
 
   canvasUpdate = () => {
-    this.refs.canvas.update(this.history.fixedImageCanvas, this.history.queue);
+    this.refs.canvas.update(this.history.queue);
   }
 
   render() {

@@ -2,11 +2,17 @@ import React from 'react';
 import './Canvas.css';
 
 class CanvasPiece extends React.Component {
-  componentDidMount() {
-    this.context = this.refs.canvas.getContext('2d');
+  constructor() {
+    super();
+
+    this.canvasRef = React.createRef();
 
     this.temporaryCanvas = document.createElement('canvas');
     this.temporaryCanvasContext = this.temporaryCanvas.getContext('2d');
+  }
+
+  componentDidMount() {
+    this.context = this.canvasRef.current.getContext('2d');
   }
 
   commit = action => {
@@ -47,18 +53,11 @@ class CanvasPiece extends React.Component {
 
   clear = () => this.context.clearRect(0, 0, this.props.canvasWidth, this.props.canvasHeight);
 
-  // fixedImageCanvas を入れる用
-  initialize = image => {
-    this.context.globalAlpha = 1.0;
-    this.context.globalCompositeOperation = 'source-over';
-    this.context.drawImage(image, 0, 0);
-  }
-
   shouldComponentUpdate = () => false;
   
   render() {
     return (
-      <canvas ref="canvas" className="canvas-piece" width={this.props.canvasWidth} height={this.props.canvasHeight}></canvas>
+      <canvas ref={this.canvasRef} className="canvas-piece" width={this.props.canvasWidth} height={this.props.canvasHeight}></canvas>
     );
   }
 }

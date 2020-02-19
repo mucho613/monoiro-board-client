@@ -4,8 +4,9 @@ class History {
   socket = null;
   fixedImageCanvas;
   fixedImageCanvasContext;
-  temporaryCanvas;
-  temporaryCanvasContext;
+
+  initialImage;
+  initialImageRendered = false;
 
   constructor(queueMaxLength, socket, canvasUpdateCallback) {
     this.queueMaxLength = queueMaxLength;
@@ -14,7 +15,7 @@ class History {
     // 他のユーザーの操作
     this.socket.on('action start', (id, tool) => {
       this.actionStart(id, tool);
-      // TODO: これ外側のモジュールに依存しまくりでかっこ悪いからやめたい
+      // TODO: これちょっとかっこ悪いからやめたい
       canvasUpdateCallback();
     });
 
@@ -37,9 +38,6 @@ class History {
     this.fixedImageCanvas.width = 2048;
     this.fixedImageCanvas.height = 2048;
     this.fixedImageCanvasContext = this.fixedImageCanvas.getContext('2d');
-
-    // this.temporaryCanvas = document.createElement('canvas');
-    // this.temporaryCanvasContext = this.temporaryCanvas.getContext('2d');
   }
 
   // 自分の操作
@@ -63,18 +61,13 @@ class History {
     this.socket.emit('undo');
   }
 
-  setFixedImage = base64 => {
-    const image = new Image(2048, 2048);
-    image.src = base64;
-    this.fixedImageCanvasContext.drawImage(image, 0, 0);
-  }
-
   setQueue = queue => {
     // image が入ってないかもしれないので、ここで全部 image を作る
     for(let i = 0; i < queue.length; i++) {
       const action = queue[i];
 
-      if(action.image === null && action.stroke.length > 1) {
+      // action.image が base64 だった場合用
+      if(typeof(action.image) === 'string') {
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
 
@@ -84,7 +77,22 @@ class History {
         canvas.width = width;
         canvas.height = height;
 
-        context.clearRect(0, 0, width, height);
+        const image = new Image();
+        image.src = action.image;
+        context.drawImage(image, 0, 0);
+
+
+        action.image = canvas;
+      }
+      else if(action.image === null && action.stroke.length > 1) {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        const width = action.right - action.left;
+        const height = action.bottom - action.top;
+
+        canvas.width = width;
+        canvas.height = height;
 
         context.lineCap = 'round';
         context.lineJoin = 'round';
@@ -135,7 +143,7 @@ class History {
           : 'destination-out';
 
         if(action.image) {
-          this.fixedImageCanvasContext.globalAlpha = 1.0;
+          this.fixedImageCanvasContext.globalAlpha = action.tool.alpha;
           this.fixedImageCanvasContext.drawImage(action.image, action.left, action.top);
         }
         // HistoryQueue の終端に Action があるのに、もしも image 変換されてなかった場合は、
@@ -255,11 +263,11 @@ class History {
     }
   }
 
-  getFixedImage = () => {
+  getFixedCanvas = () => {
+    this.fixedImageCanvasContext.drawImage(this.initialImage, 0, 0);
+
     return this.fixedImageCanvas;
   }
-
-  getQueue = () => this.queue;
 }
 
 export default History;
