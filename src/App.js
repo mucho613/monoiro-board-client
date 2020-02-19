@@ -2,86 +2,98 @@ import React from 'react';
 import './App.css';
 
 import io from 'socket.io-client';
-import Toolbox from './ToolBox';
+import Controller from './Controller';
+
 import Canvas from './Canvas';
+import History from './History';
+import Tool from './Tool';
 
 class App extends React.Component {
+  historyQueueMaxLength = 5;
+
   constructor() {
     super();
 
+    this.socket = io.connect('https://mucho613.space:8081');
+
+    this.history = new History(this.historyQueueMaxLength, this.socket, this.canvasUpdate);
+    
+    this.tools = {
+      pen: new Tool('pen', 'ペン', '#555555', 1.0, 16),
+      eraser: new Tool('eraser', '消しゴム', '#ffffff', 1.0, 64)
+    };
+
     this.state = {
-      splashWindowIsVisible: true,
-      leftyUi: false,
-
-      selectedTool: 1,
-      penColor: "#555555",
-      defaultAlpha: 1.0,
-
-      penThicknessCoefficient: 16,
-      eraserThicknessCoefficient: 64,
+      id: null,
+      tools: this.tools,
+      selectedTool: this.tools.pen
     }
 
-    this.socket = io.connect('https://mucho613.space:8080');
+    this.socket.on('init', initializeData => {
+      this.socket.emit('request fixed image');
 
-    this.socket.on('init', base64 => {
-      const image = new Image();
-      image.src = base64.imageData;
-      setTimeout(() => this.refs.canvas.initialize(image), 0);
+      this.history.setQueue(initializeData.historyQueue);
+
+      this.setState({ id: this.socket.id });
+      this.canvasUpdate();
     });
 
-    this.socket.on('send user', msg => {
-      this.refs.canvas.draw(msg);
+    this.socket.on('fixed image', base64 => {
+      setTimeout(() => this.history.setFixedImage(base64), 500);
     });
   }
 
   componentDidMount() {
-    this.downloadLink = document.getElementById('download-link');
-
     window.addEventListener('pageshow', e => e.persisted && window.location.reload());
     window.addEventListener('scroll', () => this.scrolled = true);
   }
-
-  handleDraw = attribute => this.socket.emit('server send', attribute);
-
-  handleToolChange = tool => this.setState({selectedTool: tool});
-  handlePenColorChange = color => this.setState({penColor: color});
-  handlePenThicknessChange = thickness => this.setState({penThicknessCoefficient: thickness});
-  handleEraserThicknessChange = thickness => this.setState({eraserThicknessCoefficient: thickness});
-  handleLeftyChange = isLefty => this.setState({leftyUi: isLefty});
-  handleUndo = () => this.refs.canvas.undo();
+  handleActionStart = () => {
+    this.history.localActionStart(Object.assign({}, this.state.selectedTool));
+    this.canvasUpdate();
+  }
+  handleActionUpdate = (x, y, force) => {
+    this.history.localActionUpdate({ x: x, y: y, force: force });
+    this.canvasUpdate();
+  }
+  handleActionEnd = () => {
+    this.history.localActionEnd();
+    this.canvasUpdate();
+  }
+  handleUndo = () => {
+    this.history.localUndo();
+    this.canvasUpdate();
+  }
   handleDownload = () => {
-    const base64 = this.refs.canvas.getCanvasImageBase64();
+    const base64 = this.history.fixedImageCanvas.toDataURL();
     const newWindow = window.open();
     newWindow.document.write('<img src="' + base64 + '" style="width:100%; height:100%; object-fit: contain;"></img>');
+  }
+
+  handleToolChange = tools => this.setState({ tools: tools });
+  handleSelectedToolChange = tool => this.setState({ selectedTool: tool });
+
+  canvasUpdate = () => {
+    this.refs.canvas.update(this.history.fixedImageCanvas, this.history.queue);
   }
 
   render() {
     return (
       <div className="App">
-        <div className={this.state.splashWindowIsVisible ? 'splash' : 'splash hide'}>
-          <h1>MONOIRO Board</h1>
-          <button onClick={e => this.setState({splashWindowIsVisible: false})}>閉じる</button>
-        </div>
-        
-        <Toolbox
-          toolState={this.state}
+        <Controller
+          selectedTool={this.state.selectedTool}
+          tools={this.state.tools}
           onToolChange={this.handleToolChange}
-          onPenColorChange={this.handlePenColorChange}
-          onPenThicknessChange={this.handlePenThicknessChange}
-          onEraserThicknessChange={this.handleEraserThicknessChange}
-          onLeftyChange={this.handleLeftyChange}
+          onSelectedToolChange={this.handleSelectedToolChange}
+          onUndo={this.handleUndo}
           onDownload={this.handleDownload}
+          onStrokeStart={this.handleActionStart}
+          onStrokeMove={this.handleActionUpdate}
+          onStrokeEnd={this.handleActionEnd}
         />
 
         <Canvas
-          initialImage={this.state.initialImage}
-          onDraw={this.handleDraw}
           ref={'canvas'}
           selectedTool={this.state.selectedTool}
-          penColor={this.state.penColor}
-          defaultAlpha={this.state.defaultAlpha}
-          penThicknessCoefficient={this.state.penThicknessCoefficient}
-          eraserThicknessCoefficient={this.state.eraserThicknessCoefficient}
         />
       </div>
     );

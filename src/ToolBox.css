@@ -1,18 +1,17 @@
-.overlay {
-  position: absolute;
+.tool-box {
+  position: fixed;
   background-color: rgba(207, 207, 207, 0.514);
   padding: 20px;
   margin: 20px 0 0 0;
   border-radius: 0 10px 10px 0;
   box-shadow: 0 0 8px rgb(218, 218, 218);
-  z-index: 2; 
 }
 
-.overlay.lefty {
+.tool-box.lefty {
   right: 0;
 }
 
-.overlay button {
+.tool-box button {
   background-color: white;
   display: block;
   height: 40px; 
@@ -28,7 +27,7 @@
   appearance: none;
 }
 
-.overlay button.active {
+.tool-box button.active {
   background-color: rgb(255, 219, 118);
 }
 

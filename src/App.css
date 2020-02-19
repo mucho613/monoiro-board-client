@@ -1,36 +1,13 @@
-#root, .App {
-  overflow: hidden;
-}
-
 body {
   font-family: 'Noto Sans JP', sans-serif;
   margin: 0;
+  background-color: #d2d2d2;
+  touch-action: manipulation;
 }
 
 h1 {
   margin: 0;
   font-family: 'Montserrat', sans-serif;
-}
-
-.strike {
-  text-decoration: line-through;
-}
-
-.splash {
-  width: 50%;
-  margin: 10% auto 0;
-  box-shadow: 0 4px 4px #ccc;
-  text-align: center;
-  background-color: #ffffffd5;
-  padding: 30px;
-  position: absolute;
-  z-index: 2;
-  left: 0;
-  right: 0;
-}
-
-.splash.hide {
-  display: none;
 }
 
 .canvas-wrapper {
@@ -46,15 +23,18 @@ h1 {
   margin-top: 0;
 }
 
-section {
-  margin-left: 20px;
+.controller {
+  position: absolute;
 }
 
-dt {
-  margin-top: 10px;
+.tool-box {
+  position: fixed;
+  z-index: 1001;
 }
 
-dd {
-  font-size: 0.8em;
-  margin-left: 20px;
+.canvas-controller {
+  position: fixed;
+  z-index: 1000;
+  width: 100vw;
+  height: 100vh;
 }
