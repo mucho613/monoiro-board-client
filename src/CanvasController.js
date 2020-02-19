@@ -92,8 +92,8 @@ class CanvasController extends React.Component {
 
   getCanvasPositionFromClientPosition = (x, y) => {
     return {
-      x: x + window.pageXOffset,
-      y: y + window.pageYOffset
+      x: ~~(x + window.pageXOffset),
+      y: ~~(y + window.pageYOffset)
     }
   }
 
