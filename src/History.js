@@ -42,23 +42,29 @@ class History {
 
   // 自分の操作
   localActionStart = tool => {
-    this.actionStart(this.socket.id, tool);
     this.socket.emit('action start', tool);
+    this.actionStart(this.socket.id, tool);
   }
 
   localActionUpdate = attribute => {
-    this.actionUpdate(this.socket.id, attribute);
     this.socket.emit('action update', attribute);
+    this.actionUpdate(this.socket.id, attribute);
   }
 
   localActionEnd = () => {
-    this.actionEnd(this.socket.id);
     this.socket.emit('action end');
+    this.actionEnd(this.socket.id);
   }
 
   localUndo = () => {
-    this.undo(this.socket.id);
     this.socket.emit('undo');
+    this.undo(this.socket.id);
+  }
+
+  setFixedImage = base64 => {
+    const image = new Image();
+    image.src = base64;
+    this.fixedImageCanvasContext.drawImage(image, 0, 0);
   }
 
   setQueue = queue => {
@@ -66,25 +72,7 @@ class History {
     for(let i = 0; i < queue.length; i++) {
       const action = queue[i];
 
-      // action.image が base64 だった場合用
-      if(typeof(action.image) === 'string') {
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-
-        const width = action.right - action.left;
-        const height = action.bottom - action.top;
-
-        canvas.width = width;
-        canvas.height = height;
-
-        const image = new Image();
-        image.src = action.image;
-        context.drawImage(image, 0, 0);
-
-
-        action.image = canvas;
-      }
-      else if(action.image === null && action.stroke.length > 1) {
+      if(action.image === null && action.stroke.length > 1) {
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
 

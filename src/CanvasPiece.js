@@ -15,6 +15,12 @@ class CanvasPiece extends React.Component {
     this.context = this.canvasRef.current.getContext('2d');
   }
 
+  initialize = image => {
+    this.context.globalAlpha = 1.0;
+    this.context.globalCompositeOperation = 'source-over';
+    this.context.drawImage(image, 0, 0);
+  }
+
   commit = action => {
     this.context.globalAlpha = action.tool.alpha;
     this.context.globalCompositeOperation = action.tool.type === 'pen'

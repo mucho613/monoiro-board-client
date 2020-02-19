@@ -9,12 +9,13 @@ import History from './History';
 import Tool from './Tool';
 
 class App extends React.Component {
-  historyQueueMaxLength = 5;
+  historyQueueMaxLength = 50;
 
   constructor() {
     super();
 
-    this.socket = io.connect('http://192.168.11.2:8080');
+    this.socket = io.connect('https://mucho613.space');
+    // this.socket = io.connect('192.168.11.2:443');
 
     this.history = new History(this.historyQueueMaxLength, this.socket, this.canvasUpdate);
     
@@ -30,10 +31,16 @@ class App extends React.Component {
     }
 
     this.socket.on('init', initializeData => {
+      this.socket.emit('request fixed image');
+
       this.history.setQueue(initializeData.historyQueue);
 
       this.setState({ id: this.socket.id });
       this.canvasUpdate();
+    });
+
+    this.socket.on('fixed image', base64 => {
+      setTimeout(() => this.history.setFixedImage(base64), 500);
     });
   }
 
@@ -69,7 +76,7 @@ class App extends React.Component {
   handleSelectedToolChange = tool => this.setState({ selectedTool: tool });
 
   canvasUpdate = () => {
-    this.refs.canvas.update(this.history.queue);
+    this.refs.canvas.update(this.history.fixedImageCanvas, this.history.queue);
   }
 
   render() {

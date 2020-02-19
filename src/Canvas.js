@@ -26,8 +26,9 @@ class Canvas extends React.Component {
     this.actionEnd();
   }
 
-  update = (queue) => {
+  update = (fixedImage, queue) => {
     this.refs.canvasPiece.clear();
+    this.refs.canvasPiece.initialize(fixedImage);
     for(let i = 0; i < queue.length; i++) {
       if(queue[i].isActive) {
         this.refs.canvasPiece.commit(queue[i]);
