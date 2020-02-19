@@ -125,6 +125,7 @@ class History {
     if(this.queue.length > this.queueMaxLength) {
       const action = this.queue.shift();
 
+      // Undo されていない Action だけ FixedImageCanvas に描き込む
       if(action.isActive) {
         this.fixedImageCanvasContext.globalCompositeOperation = action.tool.type === 'pen'
           ? 'source-over'

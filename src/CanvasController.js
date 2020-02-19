@@ -1,11 +1,8 @@
 import React from 'react';
 
 class CanvasController extends React.Component {
-  mouseForce = 0.5;
-
-  penGrounded = false;
-  previousForce = 0;
-  initialTouch = true;
+  // mouseForce = 0.5;
+  // penGrounded = false;
 
   componentDidMount() {
     this.canvasController = document.getElementById('canvas-controller');
@@ -52,7 +49,8 @@ class CanvasController extends React.Component {
     }
 
     const position = this.getCanvasPositionFromClientPosition(touch.clientX, touch.clientY);
-    this.props.onStrokeStart(position.x, position.y, touch.force);
+    this.props.onStrokeStart();
+    this.props.onStrokeMove(position.x, position.y, touch.force / 2);
   }
 
   handleTouchMove = e => {
@@ -66,16 +64,7 @@ class CanvasController extends React.Component {
     }
 
     const position = this.getCanvasPositionFromClientPosition(touch.clientX, touch.clientY);
-    let force;
-    const currentForce = touch.force;
-
-    if(this.initialTouch) {
-      this.previousForce = currentForce;
-      this.initialTouch = false;
-    } 
-    else force = (currentForce + this.previousForce) / 2;
-
-    this.props.onStrokeMove(position.x, position.y, force);
+    this.props.onStrokeMove(position.x, position.y, touch.force);
   }
 
   handleTouchEnd = e => {
@@ -87,7 +76,8 @@ class CanvasController extends React.Component {
     this.initialTouch = true;
 
     const position = this.getCanvasPositionFromClientPosition(touch.clientX, touch.clientY);
-    this.props.onStrokeEnd(position.x, position.y, touch.force);
+    this.props.onStrokeMove(position.x, position.y, touch.force);
+    this.props.onStrokeEnd();
   }
 
   getCanvasPositionFromClientPosition = (x, y) => {

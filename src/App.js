@@ -47,7 +47,7 @@ class App extends React.Component {
     window.addEventListener('pageshow', e => e.persisted && window.location.reload());
     window.addEventListener('scroll', () => this.scrolled = true);
   }
-  handleActionStart = (x, y, force) => {
+  handleActionStart = () => {
     this.history.localActionStart(Object.assign({}, this.state.selectedTool));
     this.canvasUpdate();
   }
@@ -55,7 +55,7 @@ class App extends React.Component {
     this.history.localActionUpdate({ x: x, y: y, force: force });
     this.canvasUpdate();
   }
-  handleActionEnd = (x, y, force) => {
+  handleActionEnd = () => {
     this.history.localActionEnd();
     this.canvasUpdate();
   }
