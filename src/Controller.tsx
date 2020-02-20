@@ -4,8 +4,22 @@ import CanvasController from './CanvasController';
 import ToolBox from './ToolBox';
 
 import './App.css';
+import { Tool, Tools } from './Tool';
 
-class Controller extends React.Component {
+interface Props {
+  selectedTool: Tool
+  tools: Tools
+  onToolChange: (tools: Tools) => void
+  onSelectedToolChange: (tool: Tool) => void
+  onUndo: () => void
+  onDownload: () => void
+
+  onStrokeStart: () => void
+  onStrokeMove: (x: number, y: number, force: number) => void
+  onStrokeEnd: () => void
+}
+
+class Controller extends React.Component<Props> {
   render() {
     return (
       <div className="controller">

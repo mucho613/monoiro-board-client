@@ -1,73 +1,90 @@
+import { Tool, ToolType } from "./Tool";
+
+/**
+ * 現在の描画内容(Undo 可能な有限個の操作と、その領域からはみ出して確定した描画となった画像)を管理する
+ * 描画内容サーバーと自動で同期される
+ * 
+ * @class History
+ */
 class History {
-  queue = [];
-  queueMaxLength;
-  socket = null;
-  fixedImageCanvas;
-  fixedImageCanvasContext;
+  queue: any[];
+  queueMaxLength: number;
+  socket: SocketIOClient.Socket;
+  fixedImageCanvas: HTMLCanvasElement;
+  fixedImageCanvasContext: CanvasRenderingContext2D;
+  onUpdateCanvas: Function;
 
-  initialImage;
-  initialImageRendered = false;
-
-  constructor(queueMaxLength, socket, canvasUpdateCallback) {
+  constructor(queueMaxLength: number, socket: SocketIOClient.Socket, onUpdateCanvas: Function) {
     this.queueMaxLength = queueMaxLength;
     this.socket = socket;
+    this.queue = [];
+    this.onUpdateCanvas = onUpdateCanvas;
 
     // 他のユーザーの操作
-    this.socket.on('action start', (id, tool) => {
+    this.socket.on('action start', (id: string, tool: any) => {
       this.actionStart(id, tool);
-      // TODO: これちょっとかっこ悪いからやめたい
-      canvasUpdateCallback();
+      // 特に必要なし
+      // this.onUpdateCanvas(this.fixedImageCanvas, this.queue);
     });
 
-    this.socket.on('action update', (id, line) => {
+    this.socket.on('action update', (id: string, line: any) => {
       this.actionUpdate(id, line);
-      canvasUpdateCallback();
+      this.onUpdateCanvas(this.fixedImageCanvas, this.queue);
     });
 
-    this.socket.on('action end', id => {
+    this.socket.on('action end', (id: string) => {
       this.actionEnd(id);
-      canvasUpdateCallback();
+      // 特に必要なし
+      // this.onUpdateCanvas(this.fixedImageCanvas, this.queue);
     });
 
-    this.socket.on('undo', id => {
+    this.socket.on('undo', (id: string) => {
       this.undo(id);
-      canvasUpdateCallback();
+      this.onUpdateCanvas(this.fixedImageCanvas, this.queue);
     });
 
     this.fixedImageCanvas = document.createElement('canvas');
     this.fixedImageCanvas.width = 2048;
     this.fixedImageCanvas.height = 2048;
-    this.fixedImageCanvasContext = this.fixedImageCanvas.getContext('2d');
+
+    const context = this.fixedImageCanvas.getContext('2d');
+    if(!context) throw new Error('fixed image canvas が初期化できない');
+    this.fixedImageCanvasContext = context;
   }
 
   // 自分の操作
-  localActionStart = tool => {
+  localActionStart = (tool: Tool) => {
     this.socket.emit('action start', tool);
     this.actionStart(this.socket.id, tool);
+    // 特に必要なし
+    // this.onUpdateCanvas(this.fixedImageCanvas, this.queue);
   }
 
-  localActionUpdate = attribute => {
+  localActionUpdate = (attribute: any) => {
     this.socket.emit('action update', attribute);
     this.actionUpdate(this.socket.id, attribute);
+    this.onUpdateCanvas(this.fixedImageCanvas, this.queue);
   }
 
   localActionEnd = () => {
     this.socket.emit('action end');
     this.actionEnd(this.socket.id);
+    // 特に必要なし
+    // this.onUpdateCanvas(this.fixedImageCanvas, this.queue);
   }
 
   localUndo = () => {
     this.socket.emit('undo');
     this.undo(this.socket.id);
+    this.onUpdateCanvas(this.fixedImageCanvas, this.queue);
   }
 
-  setFixedImage = base64 => {
-    const image = new Image();
-    image.src = base64;
+  setFixedImage = (image: HTMLImageElement): HTMLCanvasElement => {
     this.fixedImageCanvasContext.drawImage(image, 0, 0);
+    return this.fixedImageCanvas;
   }
 
-  setQueue = queue => {
+  setQueue = (queue: Array<any>) => {
     // image が入ってないかもしれないので、ここで全部 image を作る
     for(let i = 0; i < queue.length; i++) {
       const action = queue[i];
@@ -75,6 +92,7 @@ class History {
       if(action.image === null && action.stroke.length > 1) {
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
+        if(!context) throw new Error('fixed image canvas が初期化できない');
 
         const width = action.right - action.left;
         const height = action.bottom - action.top;
@@ -102,10 +120,10 @@ class History {
       }
     }
 
-    this.queue = queue;
+    return this.queue = queue;
   }
 
-  actionStart = (id, tool) => {
+  actionStart = (id: string, tool: Tool) => {
     // Action のひな形
     const action = {
       isActive: true,
@@ -127,7 +145,7 @@ class History {
 
       // Undo されていない Action だけ FixedImageCanvas に描き込む
       if(action.isActive) {
-        this.fixedImageCanvasContext.globalCompositeOperation = action.tool.type === 'pen'
+        this.fixedImageCanvasContext.globalCompositeOperation = action.tool.type === ToolType.Pen
           ? 'source-over'
           : 'destination-out';
 
@@ -141,6 +159,7 @@ class History {
         else if(action.stroke.length > 1) {
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d');
+          if(!context) throw new Error('canvas が初期化できない');
 
           const width = action.right - action.left;
           const height = action.bottom - action.top;
@@ -175,9 +194,9 @@ class History {
     console.log('Action Start', this.queue);
   }
 
-  actionUpdate = (id, point) => {
+  actionUpdate = (id: string, point: any) => {
     // 直近の対象idの操作を検索して、取り出す
-    const action = this.queue[this.getLatestActionIndexById(id)];
+    const action = this.getLatestActionById(id);
 
     if(action) {
       // Action に Stroke を追加する
@@ -202,12 +221,13 @@ class History {
     }
   }
 
-  actionEnd = id => {
-    const action = this.queue[this.getLatestActionIndexById(id)];
+  actionEnd = (id: string) => {
+    const action = this.getLatestActionById(id);
 
     if(action && action.stroke.length > 1) {
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
+      if(!context) throw new Error('canvas が初期化できない');
 
       const width = action.right - action.left;
       const height = action.bottom - action.top;
@@ -239,23 +259,18 @@ class History {
     console.log('Action End', this.queue);
   }
 
-  undo = id => {
-    const action = this.queue[this.getLatestActionIndexById(id)];
+  undo = (id: string) => {
+    const action = this.getLatestActionById(id);
     if(action) action.isActive = false;
     return action;
   }
   
-  getLatestActionIndexById = id => {
+  getLatestActionById = (id: string) => {
     for(let i = this.queue.length - 1; i >= 0; i--) {
       const action = this.queue[i];
-      if(action.id === id && action.isActive) return i;
+      if(action.id === id && action.isActive) return this.queue[i];
     }
-  }
-
-  getFixedCanvas = () => {
-    this.fixedImageCanvasContext.drawImage(this.initialImage, 0, 0);
-
-    return this.fixedImageCanvas;
+    return this.queue[0];
   }
 }
 
