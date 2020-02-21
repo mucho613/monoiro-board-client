@@ -19,6 +19,8 @@ class InfinityCanvas extends React.Component<Props> {
     this.canvasPiece = React.createRef<CanvasPiece>();
   }
 
+  getCanvasImageBase64 = () => this.canvasPiece.current?.getCanvasImageBase64();
+
   render() {
     return (
       <div className="canvas">

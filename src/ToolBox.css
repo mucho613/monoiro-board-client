@@ -10,7 +10,7 @@
 .tool-box button {
   background-color: white;
   display: block;
-  height: 40px; 
+  height: 40px;
   width: 150px;
   margin-bottom: 8px;
   border-radius: 20px;
@@ -27,11 +27,15 @@
   background-color: rgb(255, 219, 118);
 }
 
-.pen-btn, .eraser-btn, .all-erase-btn {
+.pen-btn,
+.eraser-btn,
+.all-erase-btn {
   position: relative;
 }
 
-.pen-btn::after, .eraser-btn::after, .all-erase-btn::after {
+.pen-btn::after,
+.eraser-btn::after,
+.all-erase-btn::after {
   width: 67px;
   height: 30px;
   border: 0px;
@@ -39,7 +43,7 @@
   position: absolute;
   left: 10px;
   top: 4px;
-} 
+}
 
 .pen-btn::after {
   background: url(img/pen.png) left top no-repeat;

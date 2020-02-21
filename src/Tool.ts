@@ -19,7 +19,13 @@ export class Tool {
    * @param {number} thicknessCoefficient ツールに対する太さ設定
    * @memberof Tool
    */
-  constructor(type: ToolType, displayName: string, color: string, alpha: number, thicknessCoefficient: number) {
+  constructor(
+    type: ToolType,
+    displayName: string,
+    color: string,
+    alpha: number,
+    thicknessCoefficient: number
+  ) {
     this.type = type;
     this.displayName = displayName;
     this.color = color;
@@ -61,7 +67,7 @@ export class Tools {
 
   getById(id: string): Tool {
     const tool = this._tools.get(id);
-    if(!tool) throw new Error('対象の Tool を取得できません');
+    if (!tool) throw new Error("対象の Tool を取得できません");
     return tool;
   }
 }

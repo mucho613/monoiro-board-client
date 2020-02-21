@@ -16,7 +16,7 @@ interface States {
 }
 
 class App extends React.Component<{}, States> {
-  historyQueueMaxLength = 5;
+  historyQueueMaxLength = 100;
   socket: SocketIOClient.Socket;
   history: History;
   infinityCanvas: React.RefObject<InfinityCanvas>;
@@ -61,7 +61,10 @@ class App extends React.Component<{}, States> {
     this.socket.on("fixed image", (base64: string) => {
       const image = new Image();
       image.src = base64;
-      setTimeout(() => this.setState({ fixedImage: this.history.setFixedImage(image) }), 0);
+      setTimeout(
+        () => this.setState({ fixedImage: this.history.setFixedImage(image) }),
+        500
+      );
     });
   }
 
@@ -84,24 +87,30 @@ class App extends React.Component<{}, States> {
     this.history.localUndo();
   };
   handleDownload = () => {
-    const base64 = this.history.fixedImageCanvas.toDataURL();
-    const newWindow = window.open();
-    newWindow?.document.write(
-      '<img src="' +
-        base64 +
-        '" style="width:100%; height:100%; object-fit: contain;"></img>'
-    );
+    const base64 = this.infinityCanvas.current?.getCanvasImageBase64();
+    if(base64) {
+      const newWindow = window.open();
+      newWindow?.document.write(
+        '<img src="' +
+          base64 +
+          '" style="width:100%; height:100%; object-fit: contain;"></img>'
+      );
+    }
   };
 
   handleToolChange = (tools: Tools) => this.setState({ tools: tools });
-  handleSelectedToolChange = (tool: Tool) => this.setState({ selectedTool: tool });
+  handleSelectedToolChange = (tool: Tool) =>
+    this.setState({ selectedTool: tool });
 
-  handleUpdateCanvas = (fixedImage: HTMLCanvasElement, historyQueue: Array<any>) => {
+  handleUpdateCanvas = (
+    fixedImage: HTMLCanvasElement,
+    historyQueue: Array<any>
+  ) => {
     this.setState({
       fixedImage: fixedImage,
       historyQueue: historyQueue
     });
-  }
+  };
 
   render() {
     return (

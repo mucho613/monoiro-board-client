@@ -1,22 +1,22 @@
-import React from 'react';
+import React from "react";
 
-import CanvasController from './CanvasController';
-import ToolBox from './ToolBox';
+import CanvasController from "./CanvasController";
+import ToolBox from "./ToolBox";
 
-import './App.css';
-import { Tool, Tools } from './Tool';
+import "./App.css";
+import { Tool, Tools } from "./Tool";
 
 interface Props {
-  selectedTool: Tool
-  tools: Tools
-  onToolChange: (tools: Tools) => void
-  onSelectedToolChange: (tool: Tool) => void
-  onUndo: () => void
-  onDownload: () => void
+  selectedTool: Tool;
+  tools: Tools;
+  onToolChange: (tools: Tools) => void;
+  onSelectedToolChange: (tool: Tool) => void;
+  onUndo: () => void;
+  onDownload: () => void;
 
-  onStrokeStart: () => void
-  onStrokeMove: (x: number, y: number, force: number) => void
-  onStrokeEnd: () => void
+  onStrokeStart: () => void;
+  onStrokeMove: (x: number, y: number, force: number) => void;
+  onStrokeEnd: () => void;
 }
 
 class Controller extends React.Component<Props> {
@@ -29,11 +29,13 @@ class Controller extends React.Component<Props> {
           onToolChange={this.props.onToolChange}
           onSelectedToolChange={this.props.onSelectedToolChange}
           onUndo={this.props.onUndo}
-          onDownload={this.props.onDownload} />
+          onDownload={this.props.onDownload}
+        />
         <CanvasController
           onStrokeStart={this.props.onStrokeStart}
           onStrokeMove={this.props.onStrokeMove}
-          onStrokeEnd={this.props.onStrokeEnd} />
+          onStrokeEnd={this.props.onStrokeEnd}
+        />
       </div>
     );
   }
