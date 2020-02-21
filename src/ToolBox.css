@@ -1,21 +1,16 @@
-.overlay {
-  position: absolute;
+.tool-box {
+  position: fixed;
   background-color: rgba(207, 207, 207, 0.514);
   padding: 20px;
   margin: 20px 0 0 0;
   border-radius: 0 10px 10px 0;
   box-shadow: 0 0 8px rgb(218, 218, 218);
-  z-index: 2; 
 }
 
-.overlay.lefty {
-  right: 0;
-}
-
-.overlay button {
+.tool-box button {
   background-color: white;
   display: block;
-  height: 40px; 
+  height: 40px;
   width: 150px;
   margin-bottom: 8px;
   border-radius: 20px;
@@ -28,15 +23,19 @@
   appearance: none;
 }
 
-.overlay button.active {
+.tool-box button.active {
   background-color: rgb(255, 219, 118);
 }
 
-.pen-btn, .eraser-btn, .all-erase-btn {
+.pen-btn,
+.eraser-btn,
+.all-erase-btn {
   position: relative;
 }
 
-.pen-btn::after, .eraser-btn::after, .all-erase-btn::after {
+.pen-btn::after,
+.eraser-btn::after,
+.all-erase-btn::after {
   width: 67px;
   height: 30px;
   border: 0px;
@@ -44,7 +43,7 @@
   position: absolute;
   left: 10px;
   top: 4px;
-} 
+}
 
 .pen-btn::after {
   background: url(img/pen.png) left top no-repeat;
