@@ -1,7 +1,7 @@
 import React from "react";
-import "./Canvas.css";
+import "../css/Canvas.css";
 import CanvasPiece from "./CanvasPiece";
-import { Tool } from "./Tool";
+import { Tool } from "../modules/Tool";
 
 interface Props {
   selectedTool: Tool;

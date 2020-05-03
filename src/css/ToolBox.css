@@ -46,16 +46,16 @@
 }
 
 .pen-btn::after {
-  background: url(img/pen.png) left top no-repeat;
+  background: url(../img/pen.png) left top no-repeat;
   background-size: contain;
 }
 
 .eraser-btn::after {
-  background: url(img/eraser.png) left top no-repeat;
+  background: url(../img/eraser.png) left top no-repeat;
   background-size: contain;
 }
 
 .all-erase-btn::after {
-  background: url(img/allerase.png) left top no-repeat;
+  background: url(../img/allerase.png) left top no-repeat;
   background-size: contain;
 }

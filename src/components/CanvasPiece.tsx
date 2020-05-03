@@ -1,6 +1,6 @@
 import React from "react";
-import "./Canvas.css";
-import { ToolType } from "./Tool";
+import "../css/Canvas.css";
+import { ToolType } from "../modules/Tool";
 
 interface Props {
   canvasWidth: number;

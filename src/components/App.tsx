@@ -1,10 +1,10 @@
 import React from "react";
 import io from "socket.io-client";
-import "./App.css";
+import "../css/App.css";
 import Controller from "./Controller";
-import History from "./History";
+import History from "../modules/History";
 import InfinityCanvas from "./InfinityCanvas";
-import { Tool, Tools, ToolType } from "./Tool";
+import { Tool, Tools, ToolType } from "../modules/Tool";
 
 interface States {
   id: string;
@@ -26,7 +26,7 @@ class App extends React.Component<{}, States> {
 
     this.infinityCanvas = React.createRef<InfinityCanvas>();
 
-    this.socket = io.connect("https://mucho613.space:8081");
+    this.socket = io.connect("localhost:8080");
 
     this.history = new History(
       this.historyQueueMaxLength,

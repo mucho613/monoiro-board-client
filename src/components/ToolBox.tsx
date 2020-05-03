@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 
 import Pickr from "@simonwep/pickr";
 import "@simonwep/pickr/dist/themes/nano.min.css";
 
-import "./ToolBox.css";
-import { Tool, Tools } from "./Tool";
+import "../css/ToolBox.css";
+import { Tool, Tools } from "../modules/Tool";
 
 interface Props {
   selectedTool: Tool;
