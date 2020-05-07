@@ -1,12 +1,12 @@
 import React from "react";
 import "../css/Canvas.css";
-import { ToolType } from "../modules/Tool";
+import { ToolType } from "../types/tool";
+import { connect } from "react-redux";
 
 interface Props {
+  fixedImage: HTMLCanvasElement;
   canvasWidth: number;
   canvasHeight: number;
-  fixedImage: HTMLImageElement | HTMLCanvasElement;
-  historyQueue: Array<any>;
 }
 
 class CanvasPiece extends React.Component<Props> {
@@ -115,10 +115,6 @@ class CanvasPiece extends React.Component<Props> {
     );
   };
 
-  shouldComponentUpdate = () => false;
-
-  getCanvasImageBase64 = () => this.canvasRef.current?.toDataURL();
-
   render() {
     return (
       <canvas
@@ -131,4 +127,4 @@ class CanvasPiece extends React.Component<Props> {
   }
 }
 
-export default CanvasPiece;
+export default connect(null, { })(CanvasPiece)
